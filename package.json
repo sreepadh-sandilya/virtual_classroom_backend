@@ -1,0 +1,29 @@
+{
+  "name": "virtual_classroom_backend",
+  "version": "1.0.0",
+  "description": "Backend for Virtual Classroom [Software Engineering Course Project]",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "backend",
+    "rest-api",
+    "expressjs",
+    "mysql",
+    "mvc"
+  ],
+  "author": "Ashwin Narayanan S, A S Sreepadh, Ananya R, Arjun P, Hirthick Raj",
+  "license": "ISC",
+  "dependencies": {
+    "cluster": "^0.7.7",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "express": "^4.19.2",
+    "fs": "^0.0.1-security",
+    "helmet": "^7.1.0",
+    "mysql2": "^3.9.3",
+    "node-cron": "^3.0.3",
+    "process": "^0.11.10"
+  }
+}
