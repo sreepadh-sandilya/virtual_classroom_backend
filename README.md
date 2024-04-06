@@ -1,6 +1,6 @@
 # Virtual Classroom
 
-<img src="https://s3-us-west-2.amazonaws.com/cbi-image-service-prd/original/086696ef-c1c5-4ba1-97d8-1f0c25a9e260.png" alt="Amrita Vishwa Vidyapeetham" style="border-radius: 8px; width: 280px;"/>
+<img src="https://github.com/sreepadh-sandilya/virtual_classroom_backend/assets/90165751/d82831f2-9e17-4f04-9023-ad1db0d78f86" style="width: 280px;" />
 
 This is the backend source code for the Virtual Classroom project. The frontend source code can be found [here](https://github.com/AnanyaRamamurthy/virtual_classroom_frontend).
 
