@@ -9,7 +9,7 @@ const appConfig = {
         vcDb: {
             host: 'localhost',
             user: 'root',
-            password: 'password',
+            password: 'sree@2003',
             database: 'vcDb',
             multipleStatements: true
         },
@@ -18,7 +18,7 @@ const appConfig = {
         vcDb: {
             host: 'localhost',
             user: 'root',
-            password: 'password',
+            password: 'sree@2003',
             database: 'vcDb',
             waitForConnections: true,
             connectionLimit: CONCURRENCY_LIMIT,

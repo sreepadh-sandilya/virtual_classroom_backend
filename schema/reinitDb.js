@@ -2,8 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 const reinitDb = (db, dbName) => {
+    console.log(dbName);
     try {
-        if (dbName === "vdDb") {
+        
+        if (dbName === "vcDb") {
             fs.readFile(path.join(__dirname,'initScript.sql'), 'utf8', (err, data) => {
                 if (err) {
                     console.log(`[ERROR]: ${err}`);
@@ -27,5 +29,5 @@ const reinitDb = (db, dbName) => {
         fs.appendFileSync('./logs/db.log', `${new Date().toLocaleString} | [ERROR]: ${err}\n`)
     }
 }
-
+// console.log("executed");
 module.exports = reinitDb;
