@@ -1,9 +1,9 @@
-CREATE TABLE userRole (
+CREATE TABLE IF NOT EXISTS userRole (
     roleId INT PRIMARY KEY AUTO_INCREMENT,
     roleName VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE course (
+CREATE TABLE IF NOT EXISTS course (
     courseId INT PRIMARY KEY AUTO_INCREMENT,
     courseCode VARCHAR(20) NOT NULL,
     courseName VARCHAR(255) NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE course (
     createdBy VARCHAR(255)
 );
 
-CREATE TABLE studentData (
+CREATE TABLE IF NOT EXISTS studentData (
     studentId INT PRIMARY KEY AUTO_INCREMENT,
     studentName VARCHAR(255) NOT NULL,
     studentRollNumber VARCHAR(50) NOT NULL,
@@ -27,12 +27,12 @@ CREATE TABLE studentData (
     studentStatus BOOLEAN NOT NULL
 );
 
-CREATE TABLE departmentData (
+CREATE TABLE IF NOT EXISTS departmentData (
     deptId INT PRIMARY KEY AUTO_INCREMENT,
     deptName VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE managementData (
+CREATE TABLE IF NOT EXISTS managementData (
     managerId INT PRIMARY KEY AUTO_INCREMENT,
     managerEmail VARCHAR(255) NOT NULL,
     managerPassword VARCHAR(255) NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE managementData (
     FOREIGN KEY (deptId) REFERENCES departmentData(deptId)
 );
 
-CREATE TABLE assignment (
+CREATE TABLE IF NOT EXISTS assignment (
     assignmentId INT PRIMARY KEY AUTO_INCREMENT,
     courseId INT NOT NULL,
     isOpentoAll BOOLEAN NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE assignment (
     FOREIGN KEY (courseId) REFERENCES course(courseId)
 );
 
-CREATE TABLE courseFaculty (
+CREATE TABLE IF NOT EXISTS courseFaculty (
     courseFacultyid INT PRIMARY KEY AUTO_INCREMENT,
     courseId INT,
     managerID INT,
@@ -65,7 +65,7 @@ CREATE TABLE courseFaculty (
     FOREIGN KEY (managerID) REFERENCES managementData(managerid)
 );
 
-CREATE TABLE quiz (
+CREATE TABLE IF NOT EXISTS quiz (
     quizId INT PRIMARY KEY AUTO_INCREMENT,
     courseFacultyid INT NOT NULL,
     isOpenForAll BOOLEAN NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE quiz (
     FOREIGN KEY (courseFacultyid) REFERENCES courseFaculty(courseFacultyid)
 );
 
-CREATE TABLE quizSubmission (
+CREATE TABLE IF NOT EXISTS quizSubmission (
     quizSubmission_id INT PRIMARY KEY AUTO_INCREMENT,
     quizId INT NOT NULL,
     studentId INT NOT NULL,
@@ -85,21 +85,21 @@ CREATE TABLE quizSubmission (
     FOREIGN KEY (studentId) REFERENCES studentData(studentId)
 );
 
-CREATE TABLE quizResponse (
+CREATE TABLE IF NOT EXISTS quizResponse (
     quizResponseId INT PRIMARY KEY AUTO_INCREMENT,
     quizId INT,
     responseData JSON,
     FOREIGN KEY (quizId) REFERENCES quiz(quizId)
 );
 
-CREATE TABLE quizQuestion (
+CREATE TABLE IF NOT EXISTS quizQuestion (
     questionId INT PRIMARY KEY AUTO_INCREMENT,
     quizId INT,
     questionData JSON,
     FOREIGN KEY (quizId) REFERENCES quiz(quizId)
 );
 
-CREATE TABLE forgetPasswordStudent (
+CREATE TABLE IF NOT EXISTS forgetPasswordStudent (
     passowrdId INT PRIMARY KEY AUTO_INCREMENT,
     studentId INT,
     oTP VARCHAR(20) NOT NULL,
@@ -107,7 +107,7 @@ CREATE TABLE forgetPasswordStudent (
     FOREIGN KEY (studentId) REFERENCES studentData(studentId)
 );
 
-CREATE TABLE forgetPasswordManager (
+CREATE TABLE IF NOT EXISTS forgetPasswordManager (
     passwordId INT PRIMARY KEY AUTO_INCREMENT,
     managerId INT,
     OTP VARCHAR(20) NOT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE forgetPasswordManager (
 
 
 
-CREATE TABLE courseOpenFor (
+CREATE TABLE IF NOT EXISTS courseOpenFor (
     courseOpenId INT PRIMARY KEY AUTO_INCREMENT,
     courseId INT,
     deptId INT,
@@ -127,5 +127,5 @@ CREATE TABLE courseOpenFor (
     FOREIGN KEY (deptId) REFERENCES departmentData(deptid)
 );
 
-insert into userRole values(1,'sree');
+-- insert into userRole values(1,'sree');
 

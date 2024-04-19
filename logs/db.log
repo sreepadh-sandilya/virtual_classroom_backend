@@ -1,0 +1,3 @@
+function toLocaleString() { [native code] } | [ERROR]: Error: Table 'userrole' already exists
+function toLocaleString() { [native code] } | [ERROR]: Error: Table 'userrole' already exists
+function toLocaleString() { [native code] } | [ERROR]: Error: Duplicate entry '1' for key 'userrole.PRIMARY'
