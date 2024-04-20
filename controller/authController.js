@@ -1,6 +1,6 @@
 const vcDb = require('../connection/poolConnection');
 
-const {generateToken} = require('../middleware/login/tokenGenerator');
+const { generateToken } = require('../middleware/login/tokenGenerator');
 
 
 
@@ -19,34 +19,32 @@ const authController = {
             "userPassword": "<password>"
         }
         */
-       console.log(res);
-        if (req.body.userEmail === null || req.body.userEmail === undefined || req.body.userEmail === "" || req.body.userPassword === null || req.body.userPassword === undefined || req.body.userPassword === "") {
+        //    console.log(res);
+        if (!(typeof(req.body.userEmail) === 'string' && typeof(req.body.userPassword) === 'string' && req.body.userEmail.length > 0 && req.body.userPassword.length > 0)) {
             return res.status(400).send({ "message": "Missing details." });
         }
 
         let db_connection = await vcDb.promise().getConnection();
 
         try {
-            await db_connection.query(`LOCK TABLES studentData READ, managementData READ`);
+            await db_connection.query(`LOCK TABLES s READ, managementData READ`);
 
-            let [student] = await db_connection.query(`SELECT * from studentData WHERE studentEmail = ? AND studentPassword = ?`, [req.body.userEmail, req.body.userPassword]);
+            let [student] = await db_connection.query(`SELECT * from studentData AS s JOIN departmentData AS d ON d.deptId = s.studentDeptId WHERE s.studentEmail = ? AND s.studentPassword = ?`, [req.body.userEmail, req.body.userPassword]);
 
             if (student.length > 0) {
 
                 if (student[0].studentStatus === "2") {
-                    await db_connection.query(`UNLOCK TABLES`);
                     return res.status(401).send({ "message": "Your Account has been deactivated. Check you mail for further instructions." });
                 } else if (student[0].studentStatus !== "1") {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(401).send({"message":"account restricted!"});
+                    return res.status(401).send({ "message": "account restricted!" });
                 }
 
                 const secret_token = await generateToken({
-                    "userEmail": req.body.userEmail,
-                    "userRole": "2",
+                    "userId": student[0].studentId,
+                    "userRole": "S",
                 });
-                console.log(secret_token);
-                await db_connection.query(`UNLOCK TABLES`);
+
+                // console.log(secret_token);
 
                 return res.status(200).send({
                     "message": "Student logged in!",
@@ -58,13 +56,13 @@ const authController = {
                     "studentSection": student[0].studentSection,
                     "studentGender": student[0].studentGender,
                     "studentBatch": student[0].studentBatch,
-                    "studentDeptid": student[0].studentDeptid,
-                    "createdBy":student[0].createdBy,
-                    "studentStatus":student[0].studentStatus
+                    "studentDeptId": student[0].studentDeptId,
+                    "deptName": student[0].deptName,
+                    "studentStatus": student[0].studentStatus
                 });
             }
 
-            
+
         } catch (err) {
             console.log(err);
             const time = new Date();

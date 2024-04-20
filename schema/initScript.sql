@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS studentData (
     studentEmail VARCHAR(255) NOT NULL,
     studentPassword VARCHAR(255) NOT NULL,
     studentDob DATE NOT NULL,
-    studentDeptid INT NOT NULL,
+    studentDeptId INT NOT NULL,
     studentSection VARCHAR(20) NOT NULL,
     studentBatch INT NOT NULL,
     createdBy VARCHAR(255) NOT NULL,
