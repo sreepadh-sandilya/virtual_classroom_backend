@@ -2,6 +2,7 @@ const vcDb = require('../connection/poolConnection');
 
 const { generateToken } = require('../middleware/login/tokenGenerator');
 
+const fs = require('fs');
 
 
 const authController = {
@@ -27,7 +28,7 @@ const authController = {
         let db_connection = await vcDb.promise().getConnection();
 
         try {
-            await db_connection.query(`LOCK TABLES s READ, managementData READ`);
+            await db_connection.query(`LOCK TABLES studentData AS s READ, managementData AS m READ,departmentData AS d READ`);
 
             let [student] = await db_connection.query(`SELECT * from studentData AS s JOIN departmentData AS d ON d.deptId = s.studentDeptId WHERE s.studentEmail = ? AND s.studentPassword = ?`, [req.body.userEmail, req.body.userPassword]);
 
@@ -61,6 +62,34 @@ const authController = {
                     "studentStatus": student[0].studentStatus
                 });
             }
+            let [manager] = await db_connection.query(`SELECT * from managementData AS m JOIN departmentData AS d ON d.deptId = m.deptId WHERE m.managerEmail = ? AND m.managerPassword = ?`, [req.body.userEmail, req.body.userPassword]);
+            // console.log("data");
+            // console.log(manager);
+
+            if (manager[0].managerstatus === "2") {
+                return res.status(401).send({ "message": "Your Account has been deactivated. Check you mail for further instructions." });
+            } else if (manager[0].managerstatus !== "1") {
+                return res.status(401).send({ "message": "account restricted!" }); 
+            }
+
+            const secret_token = await generateToken({
+                "userId": manager[0].managerId,
+                "userRole": "M",
+            });
+
+            // console.log(secret_token);
+
+            return res.status(200).send({
+                "message": "manager logged in!",
+                "SECRET_TOKEN": secret_token,
+                "managerEmail": manager[0].managerEmail,
+                "managerRollId": manager[0].managerRollId,
+                "managerId": manager[0].managerId,
+                "deptId": manager[0].deptId,
+                "deptName": manager[0].deptName,
+                "managerStatus": manager[0].managerstatus
+            });
+
 
 
         } catch (err) {

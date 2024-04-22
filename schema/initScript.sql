@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS managementData (
     managementRollId INT,
     managerFullName VARCHAR(255),
     createdBy VARCHAR(255),
-    managerStatus BOOLEAN,
+    managerStatus VARCHAR(1) DEFAULT '1',
     FOREIGN KEY (deptId) REFERENCES departmentData(deptId)
 );
 
