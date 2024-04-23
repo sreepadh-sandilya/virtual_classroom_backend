@@ -1,9 +1,11 @@
 const vcDb = require('../connection/poolConnection');
 
 const { generateToken } = require('../middleware/login/tokenGenerator');
-
+const { validateToken } = require('../middleware/login/tokenValidator');
+const generateOTP = require("../middleware/forgotPassword/otpGenerator");
+const createOtpToken = require("../middleware/forgotPassword/tokenGenerator");
 const fs = require('fs');
-
+const reset_PW_OTP = require('../mail/mailer');
 
 const authController = {
     testConnection: async (req, res) => {
@@ -78,6 +80,7 @@ const authController = {
             });
 
             // console.log(secret_token);
+            
 
             return res.status(200).send({
                 "message": "manager logged in!",
@@ -102,6 +105,84 @@ const authController = {
             db_connection.release();
         }
     },
+    forgotPassword: async(req,res)=>{
+        if(req.body.userEmail === null || req.body.userEmail === undefined || req.body.userEmail === ""){
+            return res.status(400).send({"message":"missing details"});
+        }
+        let db_connection = await vcDb.promise().getConnection();
+        try{
+            await db_connection.query("LOCK TABLES studentData READ,managementData READ");
+            let [student]=await db_connection.query("SELECT * FROM studentData WHERE studentEmail=?",[req.body.userEmail])
+            let [manager]=await db_connection.query("SELECT * FROM managementData WHERE managerEmail=?",[req.body.userEmail])
+            await db_connection.query('UNLOCK TABLES');
+            if(student.length===0 && manager.length===0)
+            {
+                
+                return res.status(400).send({"message":"no user exists"});
+            }
+            const otp=generateOTP();
+            let userRole="";
+            let name="";
+            if(manager.length===0)
+            {
+                if (student[0].studentStatus === "2") {
+                    return res.status(401).send({ "message": "Your Account has been deactivated. Check you mail for further instructions." });
+                } else if (student[0].studentStatus !== "1") {
+                    return res.status(401).send({ "message": "account restricted!" });
+                }
+                await db_connection.query(`LOCK TABLES studentRegister WRITE`);
+                userRole="S";
+                name = student[0]["studentName"]
+                let [student_2]=await db_connection.query("SELECT * FROM studentRegister WHERE studentEmail=?",[req.body.userEmail]);
+                if(student_2.length===0)
+                {
+                    await db_connection.query("INSERT INTO studentRegister (studentEmail,otp,createdAt) VALUES(?,?,?)",[req.body.userEmail,otp,new Date().toISOString().slice(0, 19).replace('T', ' ')]);
+                }
+                else{
+                    await db_connection.query("UPDATE studnetRegister SET otp=?,createdAt=? WHERE studnetEmail=?",[otp,new Date().toISOString().slice(0, 19).replace('T', ' '),req.body.userEmail]);
+                }
+                await db_connection.query(`UNLOCK TABLES`);
+            }
+            else{
+                if (manager[0].managerstatus === "2") {
+                    return res.status(401).send({ "message": "Your Account has been deactivated. Check you mail for further instructions." });
+                } else if (manager[0].managerstatus !== "1") {
+                    return res.status(401).send({ "message": "account restricted!" });
+                }
+                await db_connection.query(`LOCK TABLES managerRegister WRITE`);
+                userRole="M";
+                name = manager[0]["managerFullName"]
+                let [manager_2]=await db_connection.query("SELECT * FROM managerRegister WHERE managerEmail=?",[req.body.userEmail]);
+                if(manager_2.length===0)
+                {
+                    await db_connection.query("INSERT INTO managerRegister (managerEmail,otp,createdAt) VALUES(?,?,?)",[req.body.userEmail,otp,new Date().toISOString().slice(0, 19).replace('T', ' ')]);
+                }
+                else{
+                    await db_connection.query("UPDATE managerRegister SET otp=?,createdAt=? WHERE managerEmail=?",[otp,new Date().toISOString().slice(0, 19).replace('T', ' '),req.body.userEmail]);
+                }
+                await db_connection.query(`UNLOCK TABLES`);
+            } 
+            const secret_token=await createOtpToken({
+                "userEmail":req.body.userEmail, 
+                "userRole":userRole
+            })
+            console.log(name);
+            reset_PW_OTP(name, otp, req.body.userEmail);
+            return res.status(200).send({
+                "message": "OTP sent to email.",
+                "SECRET_TOKEN": secret_token,
+                "userEmail": req.body.userEmail
+            });
+        }catch (err) {
+            console.log(err);
+            const time = new Date();
+            fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - forgotPassword - ${err}\n`);
+            return res.status(500).send({ "message": "Internal Server Error." });
+        } finally {
+            await db_connection.query(`UNLOCK TABLES`);
+            db_connection.release();
+        }
+    }
 }
 
 

@@ -11,3 +11,14 @@
 2024-04-22T18:06:24.705Z - userLogin - TypeError: Cannot read properties of undefined (reading 'managerstatus')
 2024-04-22T18:55:51.684Z - userLogin - Error: Column count doesn't match value count at row 1
 2024-04-22T18:57:34.569Z - userLogin - Error: Column count doesn't match value count at row 1
+2024-04-23T17:23:30.658Z - forgotPassword - Error: Table 'managerRegister' was not locked with LOCK TABLES
+2024-04-23T17:24:35.635Z - forgotPassword - Error: Table 'vcdb.managerregister' doesn't exist
+2024-04-23T17:28:12.205Z - forgotPassword - Error: Unknown column 'studentEmail' in 'where clause'
+2024-04-23T17:28:56.748Z - forgotPassword - Error: Incorrect datetime value: '1713893336742' for column 'createdAt' at row 1
+2024-04-23T17:31:34.839Z - forgotPassword - Error: ENOENT: no such file or directory, open './RSA/private_key.pem'
+2024-04-23T17:37:51.147Z - forgotPassword - Error: ENOENT: no such file or directory, open '../key/private_key.pem'
+2024-04-23T17:38:09.980Z - forgotPassword - Error: ENOENT: no such file or directory, open './key/private_key.pem'
+2024-04-23T17:38:43.383Z - forgotPassword - Error: ENOENT: no such file or directory, open 'virtual_classroom_backendmiddlewarekeyprivate_key.pem'
+2024-04-23T17:39:17.311Z - forgotPassword - Error: ENOENT: no such file or directory, open 'virtual_classroom_backend/middleware/key/private_key.pem'
+2024-04-23T17:39:56.374Z - forgotPassword - Error: ENOENT: no such file or directory, open './key/private_key.pem'
+2024-04-23T17:41:03.712Z - forgotPassword - Error: ENOENT: no such file or directory, open '../key/private_key.pem'

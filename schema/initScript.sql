@@ -127,5 +127,21 @@ CREATE TABLE IF NOT EXISTS courseOpenFor (
     FOREIGN KEY (deptId) REFERENCES departmentData(deptid)
 );
 
+CREATE TABLE IF NOT EXISTS studentRegister (
+    id INT NOT NULL AUTO_INCREMENT,
+    studentEmail VARCHAR(255) NOT NULL,
+    otp VARCHAR(6) NOT NULL,
+    createdAt DATETIME NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS managerRegister (
+    id INT NOT NULL AUTO_INCREMENT,
+    managerEmail VARCHAR(255) NOT NULL,
+    otp VARCHAR(6) NOT NULL,
+    createdAt DATETIME NOT NULL,
+    PRIMARY KEY (id)
+);
+
 -- insert into userRole values(1,'sree');
 
