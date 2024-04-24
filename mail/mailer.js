@@ -5,6 +5,7 @@ const nodemailer = require('nodemailer');
 function reset_PW_OTP(name, otp, userEmail) {
     // Create a nodemailer transporter
     const transporter = nodemailer.createTransport({
+        
         service: 'gmail', // e.g., 'gmail', 'outlook', etc.
         port:465,
         secure:true,
@@ -13,17 +14,19 @@ function reset_PW_OTP(name, otp, userEmail) {
         secureConnection:false, 
         auth: {
             user: 'sreepadhkadapa@gmail.com',
-            pass: 'gnhr klvj ddbg mtzo'
+            pass: 'lixj aiyr czgw gqqr'
         },
         tls:{
             rejectUnauthorized:true
         }
     });
 
-    // Email content
+
+ 
+    // Email content 
     const mailOptions = {
         from: 'sreepadhkadapa@gmail.com',
-        to: userEmail,
+        to: userEmail, 
         subject: 'Password Reset OTP',
         text: `Hello ${name}, Your OTP for password reset is ${otp}. This OTP is valid for a short period of time. Please use it to reset your password.`,
         // You can also use HTML content instead of plain text
@@ -35,7 +38,7 @@ function reset_PW_OTP(name, otp, userEmail) {
         if (error) {
             console.log('Error sending email:', error);
         } else {
-            console.log('Email sent:', info.response);
+            console.log('Email sent:', info.response); 
         }
     });
 }

@@ -22,3 +22,5 @@
 2024-04-23T17:39:17.311Z - forgotPassword - Error: ENOENT: no such file or directory, open 'virtual_classroom_backend/middleware/key/private_key.pem'
 2024-04-23T17:39:56.374Z - forgotPassword - Error: ENOENT: no such file or directory, open './key/private_key.pem'
 2024-04-23T17:41:03.712Z - forgotPassword - Error: ENOENT: no such file or directory, open '../key/private_key.pem'
+2024-04-24T09:37:37.201Z - forgotPassword - URIError: URI malformed
+2024-04-24T09:40:34.865Z - forgotPassword - URIError: URI malformed

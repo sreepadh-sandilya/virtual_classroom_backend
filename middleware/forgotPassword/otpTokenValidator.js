@@ -1,8 +1,9 @@
-
-
-async function tokenValidator(req, res, next) {
+async function resetPasswordValidator(req, res, next) {
+    // console.log(req)
     const tokenHeader = req.headers.authorization;
+    console.log(req.headers);
     const token = tokenHeader && tokenHeader.split(' ')[1];
+    //console.log("token:", token);
 
     if (tokenHeader == null || token == null) {
         res.status(401).send({
@@ -15,11 +16,8 @@ async function tokenValidator(req, res, next) {
     try {
         const payLoad = await verify(token, public_key);
         if (payLoad["secret_key"] == secret_key) {
-
             req.authorization_tier = payLoad["userRole"];
             req.body.userEmail = payLoad["userEmail"];
-            req.body.userRole = payLoad["userRole"];
-
             next();
             return;
         } else {
@@ -36,4 +34,5 @@ async function tokenValidator(req, res, next) {
     }
 
 }
-module.exports = tokenValidator;
+
+module.exports = resetPasswordValidator;
