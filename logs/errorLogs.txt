@@ -24,3 +24,10 @@
 2024-04-23T17:41:03.712Z - forgotPassword - Error: ENOENT: no such file or directory, open '../key/private_key.pem'
 2024-04-24T09:37:37.201Z - forgotPassword - URIError: URI malformed
 2024-04-24T09:40:34.865Z - forgotPassword - URIError: URI malformed
+2024-04-25T15:55:04.736Z - userLogin - Error: Incorrect integer value: 'admin' for column 'createdBy' at row 1
+2024-04-25T17:23:51.130Z - resetPassword - Error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'studentRegister WRITE,managerRegister WRITE' at line 1
+2024-04-25T17:27:24.726Z - resetPassword - TypeError: Cannot read properties of undefined (reading 'affectedRows')
+2024-04-25T17:29:36.129Z - resetPassword - TypeError: Cannot read properties of undefined (reading 'affectedRows')
+2024-04-25T17:32:02.891Z - resetPassword - TypeError: Cannot read properties of undefined (reading 'affectedRows')
+2024-04-25T17:35:24.475Z - resetPassword - TypeError: object is not iterable (cannot read property Symbol(Symbol.iterator))
+2024-04-25T17:40:15.894Z - resetPassword - TypeError: object is not iterable (cannot read property Symbol(Symbol.iterator))

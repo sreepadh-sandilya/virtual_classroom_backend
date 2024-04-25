@@ -7,7 +7,7 @@ async function createOtpToken(data) {
     data.secret_key = secret_key;
     const private_key = fs.readFileSync('C:/Users/win10/OneDrive/Desktop/backend/virtual_classroom_backend/middleware/key/private_key.pem');
     var token = "";
-    token = await sign(data, private_key, { expiresIn: '5 m' });
+    token = await sign(data, private_key, { expiresIn: '30 m' });
 
     return token;
 }

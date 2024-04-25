@@ -126,6 +126,7 @@ const authController = {
             const otp=generateOTP();
             let userRole="";
             let name="";
+            console.log({"manager":manager});
             if(manager.length===0)
             {
                 if (student[0].studentStatus === "2") {
@@ -139,10 +140,10 @@ const authController = {
                 let [student_2]=await db_connection.query("SELECT * FROM studentRegister WHERE studentEmail=?",[req.body.userEmail]);
                 if(student_2.length===0)
                 {
-                    await db_connection.query("INSERT INTO studentRegister (studentEmail,otp,createdAt) VALUES(?,?,?)",[req.body.userEmail,otp,new Date().toISOString().slice(0, 19).replace('T', ' ')]);
+                    await db_connection.query("INSERT INTO studentRegister (studentEmail,otp,expiryTime) VALUES(?,?,?)",[req.body.userEmail,otp,new Date().toISOString().slice(0, 19).replace('T', ' ')]);
                 }
                 else{
-                    await db_connection.query("UPDATE studnetRegister SET otp=?,createdAt=? WHERE studnetEmail=?",[otp,new Date().toISOString().slice(0, 19).replace('T', ' '),req.body.userEmail]);
+                    await db_connection.query("UPDATE studnetRegister SET otp=?,expiryTime=? WHERE studnetEmail=?",[otp,new Date().toISOString().slice(0, 19).replace('T', ' '),req.body.userEmail]);
                 }
                 await db_connection.query(`UNLOCK TABLES`);
             }
@@ -158,10 +159,10 @@ const authController = {
                 let [manager_2]=await db_connection.query("SELECT * FROM managerRegister WHERE managerEmail=?",[req.body.userEmail]);
                 if(manager_2.length===0)
                 {
-                    await db_connection.query("INSERT INTO managerRegister (managerEmail,otp,createdAt) VALUES(?,?,?)",[req.body.userEmail,otp,new Date().toISOString().slice(0, 19).replace('T', ' ')]);
+                    await db_connection.query("INSERT INTO managerRegister (managerEmail,otp,expiryTime) VALUES(?,?,?)",[req.body.userEmail,otp,new Date().toISOString().slice(0, 19).replace('T', ' ')]);
                 }
                 else{
-                    await db_connection.query("UPDATE managerRegister SET otp=?,createdAt=? WHERE managerEmail=?",[otp,new Date().toISOString().slice(0, 19).replace('T', ' '),req.body.userEmail]);
+                    await db_connection.query("UPDATE managerRegister SET otp=?,expiryTime=? WHERE managerEmail=?",[otp,new Date().toISOString().slice(0, 19).replace('T', ' '),req.body.userEmail]);
                 }
                 await db_connection.query(`UNLOCK TABLES`);
             } 
@@ -189,24 +190,25 @@ const authController = {
     resetPasswordVerify : [
         resetPasswordValidator,
         async(req,res)=>{
+            console.log(req.body);
             if ((req.body.authorization_tier !== "S" && req.body.authorization_tier !== "M" ) || req.body.userEmail === null || req.body.userEmail === undefined || req.body.userEmail === "" ||  req.body.otp === null || req.body.otp === undefined || req.body.otp === "") {
                 return res.status(400).send({ "message": "Access Restricted!" });
             }
             let db_connection = await vcDb.promise().getConnection();
             try{
 
-                await db_connection.query(`LOCK studentRegister WRITE,managerRegister WRITE`);
-                let check;
-                if(req.authorization_tier === "M")
+                await db_connection.query(`LOCK TABLES studentRegister WRITE,managerRegister WRITE`);
+                let result;
+                if(req.body.authorization_tier === "M")
                 {
-                    [check]=db_connection.query(`DELETE FROM managerRegister WHERE ManagerEmail=? AND otp=?`,[req.body.userEmail,req.body.otp])
+                    [result]=await db_connection.query(`DELETE FROM managerRegister WHERE managerEmail=? AND otp=?`,[req.body.userEmail,req.body.otp])
                 }
-                if(req.authorization_tier === "S")
+                if(req.body.authorization_tier === "S")
                 {
-                    [check]=db_connection.query(`DELETE FROM managerRegister WHERE ManagerEmail=? AND otp=?`,[req.body.userEmail,req.body.otp])
+                    [result]=await db_connection.query(`DELETE FROM managerRegister WHERE managerEmail=? AND otp=?`,[req.body.userEmail,req.body.otp])
                 }
-
-                if (check.affectedRows === 0) {
+                console.log(result);
+                if (result.affectedRows === 0) {
                     await db_connection.query(`UNLOCK TABLES`);
                     return res.status(400).send({ "message": "Invalid OTP!" });
                 }
@@ -232,6 +234,37 @@ const authController = {
             }
         }
     ],
+    resetPassword:[
+        tokenValidator,
+        async(req,res)=>{
+            if((req.body.authorization_tier!=='M' && req.body.authorization_tier!=='S') || req.body.userEmail===null || req.body.userEmail===undefined || req.body.userEmail==="" || req.body.userPassword===null || req.body.userPassword===undefined || req.body.userPassword===""){
+                return res.status(400).send({ "message": "invalid!" });
+            }
+            let db_connection = await vcDb.promise().getConnection();
+            try{
+                await db_connection.query('LOCK TABLE managementData WRITE,studentData WRITE');
+                if(req.body.authorization_tier==='S'){
+                    await db_connection.query('UPDATE studentData SET studentPassword=? WHERE studentEmail=?',[req.body.userPassword,req.body.userEmail]);
+                }
+                else{
+                    await db_connection.query('UPDATE managementData SET managerPassword=? WHERE managerEmail=?',[req.body.userPassword,req.body.userEmail])
+                }
+                await db_connection.query('UNLOCK TABLES');
+                return res.status(200).send({
+                "message": "Password reset successfull!",
+                "userEmail": req.body.userEmail})
+            }catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - resetPassword - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query(`UNLOCK TABLES`);
+                db_connection.release();
+            }
+        }
+        
+    ]
 
     
 }

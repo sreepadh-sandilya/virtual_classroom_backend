@@ -15,7 +15,7 @@ const adminController = {
         console.log(req);    
         try{
             // await db_connection.query(`LOCK TABLES course READ`);
-            await db_connection.query(`INSERT INTO course (courseCode, courseName, courseDept, createdBy) VALUES(?, ?, ?, ?)`,[req.body.courseCode,req.body.courseName,req.body.courseDept,"admin"])
+            await db_connection.query(`INSERT INTO course (courseCode, courseName, courseDept, createdBy) VALUES(?, ?, ?, ?)`,[req.body.courseCode,req.body.courseName,req.body.courseDept,req.body.userId])
             return res.json([req.body.courseCode,req.body.courseName,req.body.courseDept]);
         }catch(err){
             console.log(err);

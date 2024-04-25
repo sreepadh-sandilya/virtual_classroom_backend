@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS userRole (
 
 CREATE TABLE IF NOT EXISTS course (
     courseId INT PRIMARY KEY AUTO_INCREMENT,
-    courseCode VARCHAR(20) NOT NULL,
+    courseCode VARCHAR(20) UNIQUE NOT NULL,
     courseName VARCHAR(255) NOT NULL,
     courseDept VARCHAR(100),
     createdBy INT,
@@ -13,24 +13,43 @@ CREATE TABLE IF NOT EXISTS course (
     FOREIGN KEY (createdBy) REFERENCES managementData(managerId)
 );
 
+-- CREATE TABLE IF NOT EXISTS studentData (
+--     studentId INT PRIMARY KEY AUTO_INCREMENT,
+--     studentName VARCHAR(255) NOT NULL,
+--     studentRollNumber VARCHAR(50) UNIQUE NOT NULL,
+--     studentGender VARCHAR(10) NOT NULL,
+--     studentPhone VARCHAR(20) NOT NULL,
+--     studentEmail VARCHAR(255) UNIQUE NOT NULL,
+--     studentPassword VARCHAR(255) NOT NULL,
+--     studentDob DATE NOT NULL,
+--     studentDeptId INT NOT NULL,
+--     studentSection VARCHAR(20) NOT NULL,
+--     studentBatch INT NOT NULL,
+--     createdBy INT NOT NULL,
+--     studentStatus BOOLEAN NOT NULL
+--     FOREIGN KEY (studentDeptId) REFERENCES departmentData(deptId),
+--     FOREIGN KEY (createdBy) REFERENCES managementData(managerId)
+    
+-- );
+
 CREATE TABLE IF NOT EXISTS studentData (
     studentId INT PRIMARY KEY AUTO_INCREMENT,
     studentName VARCHAR(255) NOT NULL,
-    studentRollNumber VARCHAR(50) NOT NULL,
+    studentRollNumber VARCHAR(50) UNIQUE NOT NULL,
     studentGender VARCHAR(10) NOT NULL,
     studentPhone VARCHAR(20) NOT NULL,
-    studentEmail VARCHAR(255) NOT NULL,
+    studentEmail VARCHAR(255) UNIQUE NOT NULL,
     studentPassword VARCHAR(255) NOT NULL,
     studentDob DATE NOT NULL,
     studentDeptId INT NOT NULL,
     studentSection VARCHAR(20) NOT NULL,
     studentBatch INT NOT NULL,
     createdBy INT NOT NULL,
-    studentStatus BOOLEAN NOT NULL
+    studentStatus BOOLEAN NOT NULL,
     FOREIGN KEY (studentDeptId) REFERENCES departmentData(deptId),
-    FOREIGN KEY (createdBy) REFERENCES managementData(managerId),
-    
+    FOREIGN KEY (createdBy) REFERENCES managementData(managerId)
 );
+
 
 CREATE TABLE IF NOT EXISTS departmentData (
     deptId INT PRIMARY KEY AUTO_INCREMENT,
@@ -47,7 +66,7 @@ CREATE TABLE IF NOT EXISTS managementData (
     createdBy INT,
     managerStatus VARCHAR(1) DEFAULT '1',
     FOREIGN KEY (deptId) REFERENCES departmentData(deptId),
-    FOREIGN KEY (createdBy) REFERENCES userRole(roleId),
+    FOREIGN KEY (createdBy) REFERENCES userRole(roleId)
 );
 
 CREATE TABLE IF NOT EXISTS assignment (
@@ -59,9 +78,11 @@ CREATE TABLE IF NOT EXISTS assignment (
     FOREIGN KEY (courseId) REFERENCES course(courseId)
 );
 
+
+
 CREATE TABLE IF NOT EXISTS courseFaculty (
     courseFacultyid INT PRIMARY KEY AUTO_INCREMENT,
-    courseId INT,
+    courseId INT ,
     managerID INT,
     batch INT,
 
@@ -106,22 +127,22 @@ CREATE TABLE IF NOT EXISTS quizQuestion (
     FOREIGN KEY (quizId) REFERENCES quiz(quizId)
 );
 
-CREATE TABLE IF NOT EXISTS forgetPasswordStudent (
-    passowrdId INT PRIMARY KEY AUTO_INCREMENT,
-    studentId INT,
-    oTP VARCHAR(20) NOT NULL,
-    expiryTime DATETIME NOT NULL,
-    FOREIGN KEY (studentId) REFERENCES studentData(studentId)
-);
+-- CREATE TABLE IF NOT EXISTS forgetPasswordStudent (
+--     passowrdId INT PRIMARY KEY AUTO_INCREMENT,
+--     studentId INT,
+--     otp VARCHAR(20) NOT NULL,
+--     expiryTime DATETIME NOT NULL,
+--     FOREIGN KEY (studentId) REFERENCES studentData(studentId)
+-- );
 
-CREATE TABLE IF NOT EXISTS forgetPasswordManager (
-    passwordId INT PRIMARY KEY AUTO_INCREMENT,
-    managerId INT,
-    OTP VARCHAR(20) NOT NULL,
-    expiryTime DATETIME NOT NULL,
-    FOREIGN KEY (managerId) REFERENCES managementData(managerId) 
-    -- above should be buggged........................................................
-);
+-- CREATE TABLE IF NOT EXISTS forgetPasswordManager (
+--     passwordId INT PRIMARY KEY AUTO_INCREMENT,
+--     managerId INT,
+--     otp VARCHAR(20) NOT NULL,
+--     expiryTime DATETIME NOT NULL,
+--     FOREIGN KEY (managerId) REFERENCES managementData(managerId) 
+    
+-- );
 
 
 
@@ -130,16 +151,16 @@ CREATE TABLE IF NOT EXISTS courseOpenFor (
     courseOpenId INT PRIMARY KEY AUTO_INCREMENT,
     courseId INT,
     deptId INT,
-    Batch INT,
+    Batch INT, -- should be modified.....................................................
     FOREIGN KEY (courseId) REFERENCES course(courseId),
-    FOREIGN KEY (deptId) REFERENCES departmentData(deptid)
+    FOREIGN KEY (deptId) REFERENCES departmentData(deptid) 
 );
 
 CREATE TABLE IF NOT EXISTS studentRegister (
     id INT NOT NULL AUTO_INCREMENT,
     studentEmail VARCHAR(255) NOT NULL,
     otp VARCHAR(6) NOT NULL,
-    createdAt DATETIME NOT NULL,
+    expiryTime DATETIME NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -147,9 +168,9 @@ CREATE TABLE IF NOT EXISTS managerRegister (
     id INT NOT NULL AUTO_INCREMENT,
     managerEmail VARCHAR(255) NOT NULL,
     otp VARCHAR(6) NOT NULL,
-    createdAt DATETIME NOT NULL,
+    expiryTime DATETIME NOT NULL,
     PRIMARY KEY (id)
 );
 
--- insert into userRole values(1,'sree');
+
 
