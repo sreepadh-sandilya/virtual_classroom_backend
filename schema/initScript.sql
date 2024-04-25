@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS studentRegister (
     id INT NOT NULL AUTO_INCREMENT,
     studentEmail VARCHAR(255) NOT NULL,
     otp VARCHAR(6) NOT NULL,
-    expiryTime DATETIME NOT NULL,
+    expiryTime TIMESTAMP NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS managerRegister (
     id INT NOT NULL AUTO_INCREMENT,
     managerEmail VARCHAR(255) NOT NULL,
     otp VARCHAR(6) NOT NULL,
-    expiryTime DATETIME NOT NULL,
+    expiryTime TIMESTAMP NOT NULL,
     PRIMARY KEY (id)
 );
 
