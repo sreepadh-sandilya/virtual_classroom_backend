@@ -13,7 +13,6 @@ const adminController = {
         });
     },
 
-
     createNewCourse: [
         validateToken,
         async (req, res) => {
@@ -76,57 +75,6 @@ const adminController = {
                 return res.status(500).send({ "message": "Internal Server Error." });
             } finally {
                 await db_connection.query(`UNLOCK TABLES`);
-                db_connection.close();
-                db_connection.release();
-            }
-
-        }
-    ],
-
-    getAllCourses: [
-        validateToken,
-        async (req, res) => {
-            // only admin and office
-
-            if (req.body.userRole != 'M') {
-                return res.status(401).send({ "message": "Unauthorized Access." });
-            }
-
-            const db_connection = await vcDb.promise().getConnection();
-
-            try {
-
-                await db_connection.query(`LOCK TABLES courseData c READ, managementData m READ, departmentData d READ`);
-
-                let [roleCheck] = await db_connection.query(`SELECT roleId FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
-
-                if (roleCheck.length === 0) {
-                    return res.status(400).send({ "message": "Unauthorized Access." });
-                }
-
-                if (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 3) {
-                    return res.status(400).send({ "message": "Unauthorized Access." });
-                }
-
-                let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId`);
-
-                if (courseData.length === 0) {
-                    return res.status(200).send({ "message": "No courses found.", "data": [] });
-                }
-
-
-                return res.status(200).send({
-                    "message": "Fetched Successfully",
-                    "data": courseData,
-                })
-
-            } catch (err) {
-                console.log(err);
-                const time = new Date();
-                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getAllCourses - ${err}\n`);
-                return res.status(500).send({ "message": "Internal Server Error." });
-            } finally {
-                await db_connection.query('UNLOCK TABLES');
                 db_connection.close();
                 db_connection.release();
             }
@@ -219,7 +167,84 @@ const adminController = {
         }
     ],
 
+    getAllCourses: [
+        validateToken,
+        async (req, res) => {
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
 
+            let db_connection = await vcDb.promise().getConnection();
+
+            try {
+
+                // check if admin or dept head or office, roleId = 1 or 2 or 3
+                await db_connection.query(`LOCK TABLES managementData m READ`);
+
+                let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+
+                if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+
+                // if admin or office, show all
+                if (roleCheck[0].roleId == 1 || roleCheck[0].roleId == 3) {
+                    await db_connection.query('LOCK TABLES courseData c READ, departmentData d READ, managementData m READ');
+
+                    let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId`);
+
+                    if (courseData.length === 0) {
+                        return res.status(200).send({ "message": "No courses found.", "data": [] });
+                    }
+
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": courseData,
+                    })
+                }
+
+                // if dept head. show only respective dept courses
+                if (roleCheck[0].roleId == 2) {
+                    await db_connection.query('LOCK TABLES courseData c READ, departmentData d READ, managementData m READ');
+
+                    let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId WHERE c.courseDeptId = ?`, [roleCheck[0].deptId]);
+
+                    if (courseData.length === 0) {
+                        return res.status(200).send({ "message": "No courses found.", "data": [] });
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": courseData,
+                    })
+                }
+
+                // if professor. show only their courses
+                if (roleCheck[0].roleId == 4) {
+                    return res.status(400).send({
+                        "message": "Work in Progress",
+                    })
+                }
+
+
+                return res.status(400).send({
+                    "message": "Invalid Request"
+                });
+
+            } catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getMyCourses - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+        }
+    ],
 }
 
 module.exports = adminController;
