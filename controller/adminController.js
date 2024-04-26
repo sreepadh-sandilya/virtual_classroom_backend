@@ -83,6 +83,57 @@ const adminController = {
         }
     ],
 
+    getAllCourses: [
+        validateToken,
+        async (req, res) => {
+            // only admin and office
+
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+
+            const db_connection = await vcDb.promise().getConnection();
+
+            try {
+
+                await db_connection.query(`LOCK TABLES courseData c READ, managementData m READ, departmentData d READ`);
+
+                let [roleCheck] = await db_connection.query(`SELECT roleId FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+
+                if (roleCheck.length === 0) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                if (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 3) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId`);
+
+                if (courseData.length === 0) {
+                    return res.status(200).send({ "message": "No courses found.", "data": [] });
+                }
+
+
+                return res.status(200).send({
+                    "message": "Fetched Successfully",
+                    "data": courseData,
+                })
+
+            } catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getAllCourses - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+
+        }
+    ],
+
     updateCourseData: [
         validateToken,
         async (req, res) => {
