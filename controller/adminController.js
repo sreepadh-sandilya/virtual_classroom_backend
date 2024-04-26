@@ -20,7 +20,7 @@ const adminController = {
                 return res.status(401).send({ "message": "Unauthorized Access." });
             }
 
-            if (!(typeof (req.body.courseCode) == 'string' && req.body.courseCode.length > 0 && typeof (req.body.courseName) == 'string' && req.body.courseName.length > 0 && typeof (req.body.courseDeptId) == 'string' && req.body.courseDeptId.length > 0 && validator.isNumeric(req.body.courseDeptId))) {
+            if (!(typeof (req.body.courseCode) == 'string' && req.body.courseCode.length > 0 && typeof (req.body.courseType) == 'string' && req.body.courseType.length > 0 && ['1','2','3'].includes(req.body.courseType) && typeof (req.body.courseName) == 'string' && req.body.courseName.length > 0 && typeof (req.body.courseDeptId) == 'string' && req.body.courseDeptId.length > 0 && validator.isNumeric(req.body.courseDeptId))) {
                 return res.status(400).send({ "message": "Invalid Data." });
             }
 
@@ -60,7 +60,7 @@ const adminController = {
 
                 await db_connection.query(`LOCK TABLES courseData WRITE`);
 
-                let [insertCourse] = await db_connection.query(`INSERT INTO courseData (courseCode, courseName, courseDeptId, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?)`, [req.body.courseCode, req.body.courseName, req.body.courseDeptId, req.body.userId, req.body.userId]);
+                let [insertCourse] = await db_connection.query(`INSERT INTO courseData (courseCode, courseName, courseType, courseDeptId, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?)`, [req.body.courseCode, req.body.courseName, req.body.courseType, req.body.courseDeptId, req.body.userId, req.body.userId]);
 
                 if (insertCourse.affectedRows == 0) {
                     return res.status(500).send({ "message": "Internal Server Error." });
@@ -89,7 +89,7 @@ const adminController = {
                 return res.status(401).send({ "message": "Unauthorized Access." });
             }
 
-            if (!(typeof (req.body.courseCode) == 'string' && req.body.courseCode.length > 0 && typeof (req.body.courseName) == 'string' && req.body.courseName.length > 0 && typeof (req.body.courseDeptId) == 'string' && req.body.courseDeptId.length > 0 && validator.isNumeric(req.body.courseDeptId) && typeof (req.body.courseId) == 'string' && req.body.courseId.length > 0 && validator.isNumeric(req.body.courseId))) {
+            if (!(typeof (req.body.courseCode) == 'string' && req.body.courseCode.length > 0 && typeof (req.body.courseType) == 'string' && req.body.courseType.length > 0 && ['1','2','3'].includes(req.body.courseType) && typeof (req.body.courseName) == 'string' && req.body.courseName.length > 0 && typeof (req.body.courseDeptId) == 'string' && req.body.courseDeptId.length > 0 && validator.isNumeric(req.body.courseDeptId) && typeof (req.body.courseId) == 'string' && req.body.courseId.length > 0 && validator.isNumeric(req.body.courseId))) {
                 return res.status(400).send({ "message": "Invalid Data." });
             }
 
@@ -144,7 +144,7 @@ const adminController = {
 
                 await db_connection.query(`LOCK TABLES courseData c WRITE`);
 
-                let [updateCourse] = await db_connection.query(`UPDATE courseData AS c SET courseCode = ?, courseName = ?, courseDeptId = ?, updatedBy = ? WHERE courseId = ?`, [req.body.courseCode, req.body.courseName, req.body.courseDeptId, req.body.userId, req.body.courseId]);
+                let [updateCourse] = await db_connection.query(`UPDATE courseData AS c SET courseCode = ?, courseName = ?, courseType = ?, courseDeptId = ?, updatedBy = ? WHERE courseId = ?`, [req.body.courseCode, req.body.courseName, req.body.courseType, req.body.courseDeptId, req.body.userId, req.body.courseId]);
 
 
                 if (updateCourse.affectedRows == 0) {
@@ -192,7 +192,7 @@ const adminController = {
                 if (roleCheck[0].roleId == 1 || roleCheck[0].roleId == 3) {
                     await db_connection.query('LOCK TABLES courseData c READ, departmentData d READ, managementData m READ');
 
-                    let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId`);
+                    let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseType, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId`);
 
                     if (courseData.length === 0) {
                         return res.status(200).send({ "message": "No courses found.", "data": [] });
@@ -209,7 +209,7 @@ const adminController = {
                 if (roleCheck[0].roleId == 2) {
                     await db_connection.query('LOCK TABLES courseData c READ, departmentData d READ, managementData m READ');
 
-                    let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId WHERE c.courseDeptId = ?`, [roleCheck[0].deptId]);
+                    let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseType, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId WHERE c.courseDeptId = ?`, [roleCheck[0].deptId]);
 
                     if (courseData.length === 0) {
                         return res.status(200).send({ "message": "No courses found.", "data": [] });

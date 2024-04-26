@@ -2,6 +2,9 @@ DROP TABLE IF EXISTS assignmentSubmission;
 DROP TABLE IF EXISTS assignmentData;
 DROP TABLE IF EXISTS quizSubmission;
 DROP TABLE IF EXISTS quizData;
+DROP TABLE IF EXISTS attendanceData;
+DROP TABLE IF EXISTS classRoomData;
+DROP TABLE IF EXISTS studentCourse;
 DROP TABLE IF EXISTS courseFaculty;
 DROP TABLE IF EXISTS courseData;
 DROP TABLE IF EXISTS forgotPasswordManagement;
@@ -111,6 +114,7 @@ CREATE TABLE IF NOT EXISTS courseData (
     createdBy INT NOT NULL,
     updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     courseStatus CHAR(1) NOT NULL DEFAULT '1',
+    courseType CHAR(1) NOT NULL DEFAULT '1', -- 1: Regular, 2: Non-Professional Elective, 3: Professional Elective
     updatedBy INT NOT NULL,
     FOREIGN KEY (courseDeptId) REFERENCES departmentData(deptId),
     FOREIGN KEY (createdBy) REFERENCES managementData(managerId),
@@ -134,6 +138,32 @@ CREATE TABLE IF NOT EXISTS courseFaculty (
     FOREIGN KEY (managerId) REFERENCES managementData(managerId),
     FOREIGN KEY (createdBy) REFERENCES managementData(managerId),
     FOREIGN KEY (updatedBy) REFERENCES managementData(managerId)
+);
+
+-- Below table meant only for electives
+CREATE TABLE IF NOT EXISTS studentCourse(
+    studentId INT NOT NULL,
+    classroomId INT NOT NULL,
+    FOREIGN KEY (studentId) REFERENCES studentData(studentId),
+    FOREIGN KEY (classroomId) REFERENCES courseFaculty(classroomId)
+);
+
+CREATE TABLE IF NOT EXISTS classRoomData (
+    classId INT PRIMARY KEY AUTO_INCREMENT,
+    classroomId INT NOT NULL,
+    classStartTime TIMESTAMP NOT NULL,
+    classEndTime TIMESTAMP NOT NULL,
+    classLink VARCHAR(255) NOT NULL,
+    classStatus CHAR(1) NOT NULL DEFAULT '1',
+    FOREIGN KEY (classroomId) REFERENCES courseFaculty(classroomId)
+);
+
+CREATE TABLE IF NOT EXISTS attendanceData (
+    classId INT NOT NULL,
+    studentId INT NOT NULL,
+    isPresent CHAR(1) NOT NULL DEFAULT '0',
+    FOREIGN KEY (classId) REFERENCES classRoomData(classId),
+    FOREIGN KEY (studentId) REFERENCES studentData(studentId)
 );
 
 CREATE TABLE IF NOT EXISTS quizData (
