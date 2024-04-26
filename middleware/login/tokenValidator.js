@@ -9,7 +9,7 @@ async function validateToken(req, res, next) {
 
     if (tokenHeader == null || token == null) {
         res.status(401).send({
-            "ERROR": "Unauthorized access."
+            "message": "Unauthorized access."
         });
         return;
     }
@@ -17,25 +17,32 @@ async function validateToken(req, res, next) {
     const public_key = fs.readFileSync('./middleware/key/public_key.pem');
     try {
         const payLoad = await verify(token, public_key);
-        if (payLoad["secret_key"] == secret_key) {
 
-            // req.body.studentId = payLoad["studentId"];
-            
+        if (typeof (payLoad["userRole"]) != 'string' || (payLoad["userRole"] != "S" && payLoad["userRole"] != "M") || typeof (payLoad["userId"]) != 'number') {
+            res.status(401).send({
+                "message": "Unauthorized access."
+            });
+            return;
+        }
+
+        if (payLoad["secret_key"] == secret_key) {
+            req.body.userRole = payLoad["userRole"];
+            req.body.userId = payLoad["userId"];
             next();
             return;
         } else {
             res.status(401).send({
-                "ERROR": "Unauthorized access."
+                "message": "Unauthorized access."
             });
             return;
         }
     } catch (err) {
         res.status(401).send({
-            "ERROR": "Unauthorized access."
+            "message": "Unauthorized access."
         });
         return;
     }
 
 }
 
-module.exports = {validateToken};
+module.exports = validateToken;

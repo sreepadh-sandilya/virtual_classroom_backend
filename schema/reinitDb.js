@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const reinitDb = (db, dbName) => {
-    console.log(dbName);
+    // console.log(dbName);
     try {
         
         if (dbName === "vcDb") {

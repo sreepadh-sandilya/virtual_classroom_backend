@@ -13,4 +13,4 @@ async function generateToken(data) {
     return token;
 }
 
-module.exports = {generateToken};
+module.exports = generateToken;

@@ -3,7 +3,7 @@ const vcDb = require('../connection/poolConnection');
 const userController = {
     testConnection: async (req, res) => {
         return res.status(200).send({
-            "MESSAGE": "User is up. 👍🏻",
+            "message": "User is up. 👍🏻",
             "WHO": "User"
         });
     },
