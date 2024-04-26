@@ -31,7 +31,7 @@ const adminController = {
                 // check if admin or dept head or office, roleId = 1 or 2 or 3
                 await db_connection.query(`LOCK TABLES managementData m READ`);
 
-                let [roleCheck] = await db_connection.query(`SELECT roleId FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+                let [roleCheck] = await db_connection.query(`SELECT roleId,deptId FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
 
                 if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
                     return res.status(400).send({ "message": "Unauthorized Access." });
@@ -46,6 +46,12 @@ const adminController = {
                     return res.status(400).send({ "message": "Course with same courseCode already exists." });
                 }
 
+                let [courseCheckName] = await db_connection.query(`SELECT courseName FROM courseData AS c WHERE courseCode = ?`, [req.body.courseCode]);
+
+                if (courseCheckName.length > 0) {
+                    return res.status(400).send({ "message": "Course with same courseName already exists." });
+                }
+
                 // check if department with courseDeptId exists
 
                 await db_connection.query(`LOCK TABLES departmentData READ`);
@@ -57,8 +63,18 @@ const adminController = {
                 }
 
                 // insert new course
-
+                //  console.log("userId is : ",req.body.userId);
+                //  console.log("rolecheck",roleCheck);
                 await db_connection.query(`LOCK TABLES courseData WRITE`);
+                if(req.body.userId=='2')
+                {
+                    // console.log(roleCheck[0].deptId,req.body.courseDeptId);
+                    if(roleCheck[0].deptId!=req.body.courseDeptId)
+                    {
+
+                        return res.status(400).send({"message":"Error! not same department"});
+                    }
+                }
 
                 let [insertCourse] = await db_connection.query(`INSERT INTO courseData (courseCode, courseName, courseType, courseDeptId, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?)`, [req.body.courseCode, req.body.courseName, req.body.courseType, req.body.courseDeptId, req.body.userId, req.body.userId]);
 
@@ -72,7 +88,7 @@ const adminController = {
                 console.log(err);
                 const time = new Date();
                 fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - createNewCourse - ${err}\n`);
-                return res.status(500).send({ "message": "Internal Server Error." });
+                return res.status(400).send({ "message": "Internal Server Error." });
             } finally {
                 await db_connection.query(`UNLOCK TABLES`);
                 db_connection.close();
@@ -143,6 +159,7 @@ const adminController = {
                 // update course
 
                 await db_connection.query(`LOCK TABLES courseData c WRITE`);
+
 
                 let [updateCourse] = await db_connection.query(`UPDATE courseData AS c SET courseCode = ?, courseName = ?, courseType = ?, courseDeptId = ?, updatedBy = ? WHERE courseId = ?`, [req.body.courseCode, req.body.courseName, req.body.courseType, req.body.courseDeptId, req.body.userId, req.body.courseId]);
 
