@@ -20,7 +20,7 @@ const adminController = {
                 return res.status(401).send({ "message": "Unauthorized Access." });
             }
 
-            if (!(typeof (req.body.courseCode) == 'string' && req.body.courseCode.length > 0 && typeof (req.body.courseType) == 'string' && req.body.courseType.length > 0 && ['1','2','3'].includes(req.body.courseType) && typeof (req.body.courseName) == 'string' && req.body.courseName.length > 0 && typeof (req.body.courseDeptId) == 'string' && req.body.courseDeptId.length > 0 && validator.isNumeric(req.body.courseDeptId))) {
+            if (!(typeof (req.body.courseCode) == 'string' && req.body.courseCode.length > 0 && typeof (req.body.courseType) == 'string' && req.body.courseType.length > 0 && ['1', '2', '3'].includes(req.body.courseType) && typeof (req.body.courseName) == 'string' && req.body.courseName.length > 0 && typeof (req.body.courseDeptId) == 'string' && req.body.courseDeptId.length > 0 && validator.isNumeric(req.body.courseDeptId))) {
                 return res.status(400).send({ "message": "Invalid Data." });
             }
 
@@ -31,7 +31,7 @@ const adminController = {
                 // check if admin or dept head or office, roleId = 1 or 2 or 3
                 await db_connection.query(`LOCK TABLES managementData m READ`);
 
-                let [roleCheck] = await db_connection.query(`SELECT roleId,deptId FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+                let [roleCheck] = await db_connection.query(`SELECT roleId, deptId FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
 
                 if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
                     return res.status(400).send({ "message": "Unauthorized Access." });
@@ -62,19 +62,11 @@ const adminController = {
                     return res.status(400).send({ "message": "Department does not exist." });
                 }
 
-                // insert new course
-                //  console.log("userId is : ",req.body.userId);
-                //  console.log("rolecheck",roleCheck);
-                await db_connection.query(`LOCK TABLES courseData WRITE`);
-                if(req.body.userId=='2')
-                {
-                    // console.log(roleCheck[0].deptId,req.body.courseDeptId);
-                    if(roleCheck[0].deptId!=req.body.courseDeptId)
-                    {
-
-                        return res.status(400).send({"message":"Error! not same department"});
-                    }
+                if (roleCheck[0].roleId === 2 && roleCheck[0].deptId !== req.body.courseDeptId) {
+                    return res.status(400).send({ "message": "Error! not same department" });
                 }
+
+                await db_connection.query(`LOCK TABLES courseData WRITE`);
 
                 let [insertCourse] = await db_connection.query(`INSERT INTO courseData (courseCode, courseName, courseType, courseDeptId, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?)`, [req.body.courseCode, req.body.courseName, req.body.courseType, req.body.courseDeptId, req.body.userId, req.body.userId]);
 
@@ -105,7 +97,7 @@ const adminController = {
                 return res.status(401).send({ "message": "Unauthorized Access." });
             }
 
-            if (!(typeof (req.body.courseCode) == 'string' && req.body.courseCode.length > 0 && typeof (req.body.courseType) == 'string' && req.body.courseType.length > 0 && ['1','2','3'].includes(req.body.courseType) && typeof (req.body.courseName) == 'string' && req.body.courseName.length > 0 && typeof (req.body.courseDeptId) == 'string' && req.body.courseDeptId.length > 0 && validator.isNumeric(req.body.courseDeptId) && typeof (req.body.courseId) == 'string' && req.body.courseId.length > 0 && validator.isNumeric(req.body.courseId))) {
+            if (!(typeof (req.body.courseCode) == 'string' && req.body.courseCode.length > 0 && typeof (req.body.courseType) == 'string' && req.body.courseType.length > 0 && ['1', '2', '3'].includes(req.body.courseType) && typeof (req.body.courseName) == 'string' && req.body.courseName.length > 0 && typeof (req.body.courseDeptId) == 'string' && req.body.courseDeptId.length > 0 && validator.isNumeric(req.body.courseDeptId) && typeof (req.body.courseId) == 'string' && req.body.courseId.length > 0 && validator.isNumeric(req.body.courseId))) {
                 return res.status(400).send({ "message": "Invalid Data." });
             }
 
