@@ -50,16 +50,16 @@ CREATE TABLE IF NOT EXISTS managementData (
 );
 
 -- ADMIN
-INSERT INTO managementData (managerEmail, managerPassword, deptId, roleId, managerFullName) VALUES ('hsheadone@gmail.com', 'hsheadone', 1, 1, 'THE ADMIN fellas');
+INSERT INTO managementData (managerEmail, managerPassword, deptId, roleId, managerFullName) VALUES ('hsheadone@gmail.com', 'hsheadone', 1, 1, 'A S Sreepadh');
 
 -- SAMPLE DEPT HEAD
-INSERT INTO managementData (managerEmail, managerPassword, deptId, roleId, managerFullName) VALUES ('shettyajoy@gmail.com', 'shettyajoy', 1, 2, 'AJOY SHETTY'); 
+INSERT INTO managementData (managerEmail, managerPassword, deptId, roleId, managerFullName) VALUES ('shettyajoy@gmail.com', 'shettyajoy', 1, 2, 'Ajoy Shetty'); 
 
 -- SAMPLE OFFICE
-INSERT INTO managementData (managerEmail, managerPassword, deptId, roleId, managerFullName) VALUES ('21f3001600@ds.study.iitm.ac.in', '21f3001600', 1, 3, 'OFFICE OF CSE');
+INSERT INTO managementData (managerEmail, managerPassword, deptId, roleId, managerFullName) VALUES ('21f3001600@ds.study.iitm.ac.in', '21f3001600', 1, 3, 'CSE Office');
 
 -- SAMPLE PROFESSOR
-INSERT INTO managementData (managerEmail, managerPassword, deptId, roleId, managerFullName) VALUES ('ashrockzzz2003@gmail.com', 'ashrockzzz2003', 1, 4, 'ASHWIN NARAYANAN S');
+INSERT INTO managementData (managerEmail, managerPassword, deptId, roleId, managerFullName) VALUES ('ashrockzzz2003@gmail.com', 'ashrockzzz2003', 1, 4, 'Ashwin Narayanan S');
 
 
 CREATE TABLE IF NOT EXISTS studentData (

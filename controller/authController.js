@@ -58,6 +58,7 @@ const authController = {
                 return res.status(200).send({
                     "message": "Login Successful.",
                     "studentData": student[0],
+                    "userRole": "S",
                     "SECRET_TOKEN": token
                 });
             }
@@ -81,6 +82,7 @@ const authController = {
                 return res.status(200).send({
                     "message": "Login Successful.",
                     "managerData": manager[0],
+                    "userRole": "M",
                     "SECRET_TOKEN": token,
                 });
             }
