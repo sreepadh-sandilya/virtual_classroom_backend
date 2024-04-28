@@ -270,7 +270,7 @@ const adminController = {
                     return res.status(400).send({"message":"invalid inputs!"});
                 }
                 await db_connection.query(`LOCK TABLES managementData READ`);
-                // let [manager]=await db_connection.query(`SELECT * FROM managementData WHERE managerEmail=?`,[req.body.userEmail]);
+               
                 let [roleCheck]=await db_connection.query(`SELECT * FROM managementData WHERE managerId=?`,[req.body.userId]);
                     if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
                     return res.status(400).send({ "message": "Unauthorized Access." });
@@ -367,15 +367,18 @@ const adminController = {
             if (req.body.userRole != 'M') {
                 return res.status(401).send({ "message": "Unauthorized Access." });
             }
-            if(req.body.userId!=1)
-            {
-                return res.status(401).send({ "message": "Unauthorized Access." });
-            }
+
             let db_connection = await vcDb.promise().getConnection();
             try{
                 if(typeof(req.body.deptName)!='string' || req.body.deptName.length==0)
                 {
                     return res.status(400).send({"message":"invalid inputs!"});
+                }
+                await db_connection.query(`LOCK TABLES managementData READ`);
+               // only admin can insert departmnets
+                let [roleCheck]=await db_connection.query(`SELECT * FROM managementData WHERE managerId=?`,[req.body.userId]);
+                    if (roleCheck.length == 0 || roleCheck[0].roleId != 1 ) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
                 }
                 await db_connection.query(`LOCK TABLES departmnetData WRITE`);
                 [checkDepartment]=await db_connection.query(`SELECT deptName FROM departmentData WHERE deptName=?`,[req.body.deptName]);
@@ -384,6 +387,7 @@ const adminController = {
                     return res.status(400).send({"message":"department already exists!"});
                 }
                 await db_connection.query(`INSERT INTO departmentData(deptName) VALUES(?)`,[req.body.deptName]);
+                await db_connection.query(`UNLOCK TABLES`);
                 return res.status(200).send({"message":"sucessfully updated!"});
             }catch (err) {
                 console.log(err);
