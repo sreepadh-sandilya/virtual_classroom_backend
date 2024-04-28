@@ -254,6 +254,106 @@ const adminController = {
             }
         }
     ],
+    assignProfessor:[
+        validateToken,
+        async(req,res)=>{
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+            let db_connection = await vcDb.promise().getConnection();
+            try{
+                if(!(typeof(req.body.batchStart)=='string' && req.body.batchStart.length==4 && typeof(req.body.batchEnd)=='string' && req.body.batchEnd.length==4 && typeof(req.body.section)=='string' && req.body.section.length==1 && validator.isNumeric(req.body.courseId) && validator.isNumeric(req.body.managerId)))
+                {
+                    return res.status(400).send({"message":"invalid inputs!"});
+                }
+                await db_connection.query(`LOCK TABLES managementData READ`);
+                let [roleCheck]=await db_connection.query(`SELECT * FROM managementData WHERE managerId=?`,[req.body.userId]);
+                // the course id should be in course table
+                await db_connection.query(`LOCK TABLES courseData READ`);
+                let [courseCheck]=await db_connection.query(`SELECT courseId,courseDeptId FROM courseData WHERE courseId=?`,[req.body.courseId]);
+                // console.log({"courseCheck":courseCheck});
+                if(courseCheck[0].length===0)
+                {
+                    await db_connection.query(`UNLOCK TABLES`); 
+                    return res.status(400).send({"message":"course not exists"});
+                }
+                // check if managerId exists
+                await db_connection.query(`UNLOCK TABLES`); 
+                await db_connection.query(`LOCK TABLES managementData READ`); 
+                let [managerCheck]=await db_connection.query(`SELECT managerId,deptId FROM managementData WHERE managerId=?`,[req.body.managerId]);
+                // console.log({"managerCheck":managerCheck});
+                if(managerCheck[0].length===0)
+                {
+                    await db_connection.query(`UNLOCK TABLES`); 
+                    return res.status(400).send({"message":"manager not exists"});
+                }
+                // check if section is present or not
+                await db_connection.query(`UNLOCK TABLES`); 
+                await db_connection.query(`LOCK TABLES studentData READ`);
+                let [sectionCheck]=await db_connection.query(`SELECT studentSection FROM studentData WHERE studentSection=?`,[req.body.section]);
+                // console.log({"sectionCheck":sectionCheck});
+                if(sectionCheck[0].length===0)
+                {
+                    await db_connection.query(`UNLOCK TABLES`); 
+                    return res.status(400).send({"message":"section not exists"});
+                }
+                // batch exists or not
+                await db_connection.query(`UNLOCK TABLES`); 
+                await db_connection.query(`LOCK TABLES studentData READ`);
+                let [batchCheck]=await db_connection.query(`SELECT studentBatchStart FROM studentData WHERE studentBatchStart=? AND studentBatchEnd=?`,[req.body.batchStart,req.body.batchEnd]);
+                // console.log({"batchCheck":batchCheck});
+                if(batchCheck[0].length===0)
+                {
+                    await db_connection.query(`UNLOCK TABLES`); 
+                    return res.status(400).send({"message":"batch not exists"});
+                }
+
+                // whether section is present for that particular batch
+                await db_connection.query(`UNLOCK TABLES`); 
+                await db_connection.query(`LOCK TABLES studentData READ`);
+                let [sectionCheckBatch]=await db_connection.query(`SELECT studentSection FROM studentData WHERE studentSection=? AND studentBatchStart=? AND studentBatchEnd=?`,[req.body.section,req.body.batchStart,req.body.batchEnd]);
+                // console.log({"sectionCheckBatch":sectionCheckBatch});
+                if(sectionCheckBatch[0].length===0)
+                {
+                    await db_connection.query(`UNLOCK TABLES`); 
+                    return res.status(400).send({"message":"batch not exists"});
+                }
+
+                //whether coursedept and managerdept are same
+                if(managerCheck[0].deptId!=courseCheck[0].courseDeptId)
+                {
+                    await db_connection.query(`UNLOCK TABLES`); 
+                    return res.status(400).send({"message":"not same departments"});
+                }
+
+                if(req.roleId==2 && roleCheck[0].deptId!=courseCheck[0].courseDeptId && roleCheck[0].deptId!=managerCheck[0].deptId)
+                {
+                    await db_connection.query(`UNLOCK TABLES`); 
+                    return res.status(400).send({"message":"user is of different department"});
+                }
+                await db_connection.query(`LOCK TABLES courseFaculty WRITE`);
+                let [insert]=await db_connection.query(`INSERT INTO courseFaculty (courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(?,?,?,?,?,?,?)`,[req.body.courseId,req.body.managerId,req.body.batchStart,req.body.batchEnd,req.body.section,req.body.userId,req.body.userId])
+                // console.log({"insert":insert})
+                await db_connection.query(`UNLOCK TABLES`);
+                if(insert.affectedRows==0)
+                {
+                   return  res.status(400).send({"messgae":"internal server error"});
+                }
+                else{
+                    res.status(200).send({"message":"sucessfully updated!"});
+                }
+            }catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getMyCourses - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+        }
+    ]
 }
 
 module.exports = adminController;

@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS courseData (
     FOREIGN KEY (createdBy) REFERENCES managementData(managerId),
     FOREIGN KEY (updatedBy) REFERENCES managementData(managerId)
 );
+INSERT INTO courseData(courseCode,courseName,courseDeptId,createdBy,courseStatus,courseType,updatedBy) VALUES('19CSE301','dsa',1,1,'1','1',1);
 
 CREATE TABLE IF NOT EXISTS courseFaculty (
     classroomId INT PRIMARY KEY AUTO_INCREMENT,

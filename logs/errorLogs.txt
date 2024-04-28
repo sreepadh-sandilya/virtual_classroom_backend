@@ -1,0 +1,8 @@
+2024-04-28T06:47:22.763Z - getMyCourses - TypeError: Expected a string but received a number
+2024-04-28T06:49:44.873Z - getMyCourses - TypeError: Expected a string but received a number
+2024-04-28T06:50:52.721Z - getMyCourses - TypeError: Cannot read properties of undefined (reading 'length')
+2024-04-28T06:53:40.634Z - getMyCourses - TypeError: Cannot read properties of undefined (reading 'length')
+2024-04-28T06:56:47.655Z - getMyCourses - Error: Data too long for column 'section' at row 1
+2024-04-28T06:58:54.225Z - getMyCourses - TypeError: Cannot read properties of undefined (reading 'length')
+2024-04-28T08:07:16.929Z - getMyCourses - Error: Table 'managementData' was not locked with LOCK TABLES
+2024-04-28T08:15:58.365Z - getMyCourses - Error: Table 'managementData' was not locked with LOCK TABLES
