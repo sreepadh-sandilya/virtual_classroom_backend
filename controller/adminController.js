@@ -2,7 +2,7 @@ const vcDb = require('../connection/poolConnection');
 
 const fs = require('fs');
 const validateToken = require('../middleware/login/tokenValidator');
-
+const [validateEmail] = require('../helper/dataValidator');
 const validator = require('validator');
 
 const adminController = {
@@ -65,6 +65,9 @@ const adminController = {
                 if (roleCheck[0].roleId === 2 && roleCheck[0].deptId !== req.body.courseDeptId) {
                     return res.status(400).send({ "message": "Error! not same department" });
                 }
+
+                
+
 
                 await db_connection.query(`LOCK TABLES courseData WRITE`);
 
@@ -262,11 +265,12 @@ const adminController = {
             }
             let db_connection = await vcDb.promise().getConnection();
             try{
-                if(!(typeof(req.body.batchStart)=='string' && req.body.batchStart.length==4 && typeof(req.body.batchEnd)=='string' && req.body.batchEnd.length==4 && typeof(req.body.section)=='string' && req.body.section.length==1 && validator.isNumeric(req.body.courseId) && validator.isNumeric(req.body.managerId)))
+                if(!(typeof(req.body.batchStart)=='string' && req.body.batchStart.length==4 && typeof(req.body.batchEnd)=='string' && req.body.batchEnd.length==4 && typeof(req.body.section)=='string' && req.body.section.length==1 && validator.isNumeric(req.body.courseId) && validateEmail(req.body.userEmail) ))
                 {
                     return res.status(400).send({"message":"invalid inputs!"});
                 }
                 await db_connection.query(`LOCK TABLES managementData READ`);
+                // let [manager]=await db_connection.query(`SELECT * FROM managementData WHERE managerEmail=?`,[req.body.userEmail]);
                 let [roleCheck]=await db_connection.query(`SELECT * FROM managementData WHERE managerId=?`,[req.body.userId]);
                     if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
                     return res.status(400).send({ "message": "Unauthorized Access." });
@@ -283,7 +287,7 @@ const adminController = {
                 // check if managerId exists
                 await db_connection.query(`UNLOCK TABLES`); 
                 await db_connection.query(`LOCK TABLES managementData READ`); 
-                let [managerCheck]=await db_connection.query(`SELECT managerId,deptId FROM managementData WHERE managerId=?`,[req.body.managerId]);
+                let [managerCheck]=await db_connection.query(`SELECT managerId,deptId FROM managementData WHERE managerEmail=?`,[req.body.userEmail]);
                 // console.log({"managerCheck":managerCheck});
                 if(managerCheck[0].length==0)
                 {
@@ -335,7 +339,7 @@ const adminController = {
                     return res.status(400).send({"message":"user is of different department"});
                 }
                 await db_connection.query(`LOCK TABLES courseFaculty WRITE`);
-                let [insert]=await db_connection.query(`INSERT INTO courseFaculty (courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(?,?,?,?,?,?,?)`,[req.body.courseId,req.body.managerId,req.body.batchStart,req.body.batchEnd,req.body.section,req.body.userId,req.body.userId])
+                let [insert]=await db_connection.query(`INSERT INTO courseFaculty (courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(?,?,?,?,?,?,?)`,[req.body.courseId,managerCheck[0].managerId,req.body.batchStart,req.body.batchEnd,req.body.section,req.body.userId,req.body.userId])
                 // console.log({"insert":insert})
                 await db_connection.query(`UNLOCK TABLES`);
                 if(insert.affectedRows==0)
@@ -345,6 +349,42 @@ const adminController = {
                 else{
                     res.status(200).send({"message":"sucessfully updated!"});
                 }
+            }catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getMyCourses - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+        }
+    ],
+    addDepartment:[
+        validateToken,
+        async(req,res)=>{
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+            if(req.body.userId!=1)
+            {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+            let db_connection = await vcDb.promise().getConnection();
+            try{
+                if(typeof(req.body.deptName)!='string' || req.body.deptName.length==0)
+                {
+                    return res.status(400).send({"message":"invalid inputs!"});
+                }
+                await db_connection.query(`LOCK TABLES departmnetData WRITE`);
+                [checkDepartment]=await db_connection.query(`SELECT deptName FROM departmentData WHERE deptName=?`,[req.body.deptName]);
+                if(checkDepartment[0].length!=0)
+                {
+                    return res.status(400).send({"message":"department already exists!"});
+                }
+                await db_connection.query(`INSERT INTO departmentData(deptName) VALUES(?)`,[req.body.deptName]);
+                return res.status(200).send({"message":"sucessfully updated!"});
             }catch (err) {
                 console.log(err);
                 const time = new Date();
