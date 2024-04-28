@@ -268,11 +268,14 @@ const adminController = {
                 }
                 await db_connection.query(`LOCK TABLES managementData READ`);
                 let [roleCheck]=await db_connection.query(`SELECT * FROM managementData WHERE managerId=?`,[req.body.userId]);
+                    if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
                 // the course id should be in course table
                 await db_connection.query(`LOCK TABLES courseData READ`);
                 let [courseCheck]=await db_connection.query(`SELECT courseId,courseDeptId FROM courseData WHERE courseId=?`,[req.body.courseId]);
                 // console.log({"courseCheck":courseCheck});
-                if(courseCheck[0].length===0)
+                if(courseCheck[0].length==0)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"course not exists"});
@@ -282,7 +285,7 @@ const adminController = {
                 await db_connection.query(`LOCK TABLES managementData READ`); 
                 let [managerCheck]=await db_connection.query(`SELECT managerId,deptId FROM managementData WHERE managerId=?`,[req.body.managerId]);
                 // console.log({"managerCheck":managerCheck});
-                if(managerCheck[0].length===0)
+                if(managerCheck[0].length==0)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"manager not exists"});
@@ -302,7 +305,7 @@ const adminController = {
                 await db_connection.query(`LOCK TABLES studentData READ`);
                 let [batchCheck]=await db_connection.query(`SELECT studentBatchStart FROM studentData WHERE studentBatchStart=? AND studentBatchEnd=?`,[req.body.batchStart,req.body.batchEnd]);
                 // console.log({"batchCheck":batchCheck});
-                if(batchCheck[0].length===0)
+                if(batchCheck[0].length==0)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"batch not exists"});
