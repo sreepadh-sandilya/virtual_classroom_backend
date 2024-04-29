@@ -332,7 +332,14 @@ const adminController = {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"not same departments"});
                 }
-
+                // whether the course is present for that particular batch-section combo
+                await db_connection.query(`LOCK TABLES courseData READ,studentData READ`)
+                let [batchSectionCheck]=await db_connection.query(`SELECT courseData.courseId FROM courseData INNER JOIN studentData ON studentData.studentDeptId=courseData.courseDeptId WHERE studentData.studentSection=? AND studentData.studentBatchStart=? AND studentBatchEnd`,[req.body.section,req.body.batchStart,req.body.batchEnd]);
+                if(batchSectionCheck.length==0)
+                {
+                    await db_connection.query(`UNLOCK TABLES`); 
+                    return res.status(400).send({"message":"course doesnot exists for that batch and section"});
+                }
                 if(req.roleId==2 && roleCheck[0].deptId!=courseCheck[0].courseDeptId && roleCheck[0].deptId!=managerCheck[0].deptId)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 

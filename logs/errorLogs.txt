@@ -10,3 +10,4 @@
 2024-04-29T04:42:48.550Z - getMyCourses - TypeError: Cannot read properties of undefined (reading 'length')
 2024-04-29T04:47:55.842Z - getMyCourses - TypeError: Expected a string but received a undefined
 2024-04-29T04:52:06.642Z - getMyCourses - TypeError: Cannot read properties of undefined (reading 'length')
+2024-04-29T05:28:27.221Z - getMyCourses - Error: Table 'courseData' was not locked with LOCK TABLES
