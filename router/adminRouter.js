@@ -8,4 +8,5 @@ adminRouter.get("/course/all", adminController.getAllCourses);
 adminRouter.post("/course/create", adminController.createNewCourse);
 adminRouter.post("/course/update", adminController.updateCourseData);
 adminRouter.post("/assign/professor", adminController.assignProfessor);
+adminRouter.post("/add/department",adminController.addDepartment);
 module.exports = adminRouter;

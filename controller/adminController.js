@@ -265,7 +265,7 @@ const adminController = {
             }
             let db_connection = await vcDb.promise().getConnection();
             try{
-                if(!(typeof(req.body.batchStart)=='string' && req.body.batchStart.length==4 && typeof(req.body.batchEnd)=='string' && req.body.batchEnd.length==4 && typeof(req.body.section)=='string' && req.body.section.length==1 && validator.isNumeric(req.body.courseId) && validateEmail(req.body.userEmail) ))
+                if(!(typeof(req.body.batchStart)=='string' && req.body.batchStart.length==4 && typeof(req.body.batchEnd)=='string' && req.body.batchEnd.length==4 && typeof(req.body.section)=='string' && req.body.section.length==1 && validator.isNumeric(req.body.courseId) && validateEmail(req.body.managerEmail) ))
                 {
                     return res.status(400).send({"message":"invalid inputs!"});
                 }
@@ -279,7 +279,7 @@ const adminController = {
                 await db_connection.query(`LOCK TABLES courseData READ`);
                 let [courseCheck]=await db_connection.query(`SELECT courseId,courseDeptId FROM courseData WHERE courseId=?`,[req.body.courseId]);
                 // console.log({"courseCheck":courseCheck});
-                if(courseCheck[0].length==0)
+                if(courseCheck.length==0)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"course not exists"});
@@ -287,9 +287,9 @@ const adminController = {
                 // check if managerId exists
                 await db_connection.query(`UNLOCK TABLES`); 
                 await db_connection.query(`LOCK TABLES managementData READ`); 
-                let [managerCheck]=await db_connection.query(`SELECT managerId,deptId FROM managementData WHERE managerEmail=?`,[req.body.userEmail]);
+                let [managerCheck]=await db_connection.query(`SELECT managerId,deptId FROM managementData WHERE managerEmail=?`,[req.body.managerEmail]);
                 // console.log({"managerCheck":managerCheck});
-                if(managerCheck[0].length==0)
+                if(managerCheck.length==0)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"manager not exists"});
@@ -299,7 +299,7 @@ const adminController = {
                 await db_connection.query(`LOCK TABLES studentData READ`);
                 let [sectionCheck]=await db_connection.query(`SELECT studentSection FROM studentData WHERE studentSection=?`,[req.body.section]);
                 // console.log({"sectionCheck":sectionCheck});
-                if(sectionCheck[0].length===0)
+                if(sectionCheck.length===0)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"section not exists"});
@@ -309,7 +309,7 @@ const adminController = {
                 await db_connection.query(`LOCK TABLES studentData READ`);
                 let [batchCheck]=await db_connection.query(`SELECT studentBatchStart FROM studentData WHERE studentBatchStart=? AND studentBatchEnd=?`,[req.body.batchStart,req.body.batchEnd]);
                 // console.log({"batchCheck":batchCheck});
-                if(batchCheck[0].length==0)
+                if(batchCheck.length==0)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"batch not exists"});
@@ -320,7 +320,7 @@ const adminController = {
                 await db_connection.query(`LOCK TABLES studentData READ`);
                 let [sectionCheckBatch]=await db_connection.query(`SELECT studentSection FROM studentData WHERE studentSection=? AND studentBatchStart=? AND studentBatchEnd=?`,[req.body.section,req.body.batchStart,req.body.batchEnd]);
                 // console.log({"sectionCheckBatch":sectionCheckBatch});
-                if(sectionCheckBatch[0].length===0)
+                if(sectionCheckBatch.length===0)
                 {
                     await db_connection.query(`UNLOCK TABLES`); 
                     return res.status(400).send({"message":"batch not exists"});
@@ -380,9 +380,9 @@ const adminController = {
                     if (roleCheck.length == 0 || roleCheck[0].roleId != 1 ) {
                     return res.status(400).send({ "message": "Unauthorized Access." });
                 }
-                await db_connection.query(`LOCK TABLES departmnetData WRITE`);
+                await db_connection.query(`LOCK TABLES departmentData WRITE`);
                 [checkDepartment]=await db_connection.query(`SELECT deptName FROM departmentData WHERE deptName=?`,[req.body.deptName]);
-                if(checkDepartment[0].length!=0)
+                if(checkDepartment.length!=0)
                 {
                     return res.status(400).send({"message":"department already exists!"});
                 }
