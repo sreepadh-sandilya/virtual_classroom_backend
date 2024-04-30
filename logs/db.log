@@ -3,3 +3,6 @@ function toLocaleString() { [native code] } | [ERROR]: Error: Duplicate entry 'h
 function toLocaleString() { [native code] } | [ERROR]: Error: Duplicate entry 'hsheadone@gmail.com' for key 'managementdata.managerEmail'
 function toLocaleString() { [native code] } | [ERROR]: Error: Column count doesn't match value count at row 1
 function toLocaleString() { [native code] } | [ERROR]: Error: Cannot drop table 'coursefaculty' referenced by a foreign key constraint 'classroomdata_ibfk_1' on table 'classroomdata'.
+function toLocaleString() { [native code] } | [ERROR]: Error: Deadlock found when trying to get lock; try restarting transaction
+function toLocaleString() { [native code] } | [ERROR]: Error: Cannot drop table 'coursefaculty' referenced by a foreign key constraint 'classroomdata_ibfk_1' on table 'classroomdata'.
+function toLocaleString() { [native code] } | [ERROR]: Error: Incorrect datetime value: '2021' for column 'classStartTime' at row 1

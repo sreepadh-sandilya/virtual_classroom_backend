@@ -2,7 +2,7 @@ const vcDb = require('../connection/poolConnection');
 
 const fs = require('fs');
 const validateToken = require('../middleware/login/tokenValidator');
-const [validateEmail] = require('../helper/dataValidator');
+const [validateEmail,ValidTimestamp,ValidateLink] = require('../helper/dataValidator');
 const validator = require('validator');
 
 const adminController = {
@@ -406,6 +406,154 @@ const adminController = {
                 db_connection.close();
                 db_connection.release();
             }
+        }
+    ],
+    createClassroom:[
+        validateToken,
+        async(req,res)=>{
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." }); 
+            }
+
+            let db_connection = await vcDb.promise().getConnection();
+            try{
+                if(!(validator.isNumeric(req.body.classroomId) && ValidateLink(req.body.classLink) &&  ValidTimestamp(req.body.classStartTime) && ValidTimestamp(req.body.classEndTime)))
+                {
+                    return res.status(400).send({"message":"invalid inputs!"});
+                }
+                await db_connection.query(`LOCK TABLES managementData READ`);
+               
+                let [roleCheck]=await db_connection.query(`SELECT * FROM managementData WHERE managerId=?`,[req.body.userId]);
+                    if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 &&  roleCheck[0].roleId != 3 &&  roleCheck[0].roleId != 4)) {
+                        await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({ "message": "Unauthorized Access" });
+                }
+                await db_connection.query(`LOCK TABLES classRoomData WRITE,courseFaculty READ`);
+                // check if classroomId is present in courseFac table
+                let[checkRoomIdFac]=await db_connection.query(`SELECT classroomId FROM courseFaculty WHERE classroomId=?`,[req.body.classroomId]);
+                if(checkRoomIdFac.length==0)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"classroomId does not exists!"});
+                }
+                // check if same classroomId exists at particular startTime and endTime
+                let [checkRoomId]=await db_connection.query(`SELECT classroomId FROM classRoomData WHERE classroomId=? AND classStartTime=? AND classEndTime=?`,[req.body.classroomId,req.body.classStartTime,req.body.classEndTime]);
+                if(checkRoomId.length!=0)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"classroomId already exists during that time period!"})
+                }
+
+                // check if same link exists in same time period 
+                
+                let [checkLink]=await db_connection.query(`SELECT classLink FROM classRoomData WHERE classLink=? AND classStartTime=? AND classEndTime=?`,[req.body.classLink,req.body.classStartTime,req.body.classEndTime]);
+                if(checkLink.length!=0)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"link already exists in this period"});
+                }
+                if(req.body.classStartTime>req.body.classEndTime)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"start time cannot be greater than end time!"});
+                }
+                await db_connection.query(`INSERT INTO classRoomData(classroomId,classStartTime,classEndTime,classLink) VALUES(?,?,?,?)`,[req.body.classroomId,req.body.classStartTime,req.body.classEndTime,req.body.classLink]);
+                await db_connection.query('UNLOCK TABLES');
+                return res.status(200).send({"message":"sucessfully inserted!"});
+
+            }catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getMyCourses - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+        }
+    ],
+    updateClassroom:[
+        validateToken,
+        async(req,res)=>{
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+
+            let db_connection = await vcDb.promise().getConnection();
+            try{
+                if(!(validator.isNumeric(req.body.classroomId) && validator.isNumeric(req.body.classId) && ValidateLink(req.body.classLink) && ValidTimestamp(req.body.classStartTime) && ValidTimestamp(req.body.classEndTime)))
+                {
+                    return res.status(400).send({"message":"invalid inputs!"});
+                }
+                await db_connection.query(`LOCK TABLES managementData READ`);
+               
+                let [roleCheck]=await db_connection.query(`SELECT * FROM managementData WHERE managerId=?`,[req.body.userId]);
+                    if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3 && roleCheck[0].roleId != 4)) {
+                        await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+                await db_connection.query(`LOCK TABLES classRoomData WRITE,courseFaculty READ`);  
+                // check if classroomId is present in courseFac table
+                let[checkRoomIdFac]=await db_connection.query(`SELECT classroomId FROM courseFaculty WHERE classroomId=?`,[req.body.classroomId]);
+                if(checkRoomIdFac.length==0)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"classroomId does not exists!"});
+                }
+                // check if same classroomId exists at particular startTime and endTime
+                let [checkRoomId]=await db_connection.query(`SELECT classroomId FROM classRoomData WHERE classroomId=? AND classStartTime=? AND classEndTime=?`,[req.body.classroomId,req.body.classStartTime,req.body.classEndTime]);
+                if(checkRoomId.length!=0)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"classroomId already exists during that time period!"})
+                }
+                //check classId if exists
+                let [checkclassId]=await db_connection.query(`SELECT classId FROM classRoomData WHERE classId=?`,[req.body.classId]);
+                if(checkclassId.length==0)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"classId doesnot exists!"})
+                }
+
+                // check if same link exists in same time period
+                
+                let [checkLink]=await db_connection.query(`SELECT classLink FROM classRoomData WHERE classLink=? AND classStartTime=? AND classEndTime=?`,[req.body.classLink,req.body.classStartTime,req.body.classEndTime]);
+                if(checkLink.length!=0)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"link already exists in this period"});
+                }
+                // start time should greater than current time
+                const dateToCompare = new Date(req.body.classStartTime);
+                if(new Date()>dateToCompare)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"cannot update the past data!"});
+                }
+                // start time cannot be greater than end time
+                if(req.body.classStartTime>req.body.classEndTime)
+                {
+                    await db_connection.query('UNLOCK TABLES');
+                    return res.status(400).send({"message":"start time cannot be greater than end time!"});
+                }
+                await db_connection.query(`UPDATE classRoomData SET classroomId=?,classStartTime=?,classEndTime=?,classLink=? WHERE classId=?`,[req.body.classroomId,req.body.classStartTime,req.body.classEndTime,req.body.classLink,req.body.classId]);
+                await db_connection.query('UNLOCK TABLES');
+                return res.status(200).send({"message":"sucessfully updated!"});
+
+                
+            }catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getMyCourses - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+        
+
         }
     ]
 }

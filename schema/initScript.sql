@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS courseData (
     FOREIGN KEY (updatedBy) REFERENCES managementData(managerId)
 );
 INSERT INTO courseData(courseCode,courseName,courseDeptId,createdBy,courseStatus,courseType,updatedBy) VALUES('19CSE301','dsa',1,1,'1','1',1);
+INSERT INTO courseData(courseCode,courseName,courseDeptId,createdBy,courseStatus,courseType,updatedBy) VALUES('19CSE302','daa',1,1,'1','1',1);
 
 CREATE TABLE IF NOT EXISTS courseFaculty (
     classroomId INT PRIMARY KEY AUTO_INCREMENT,
@@ -140,6 +141,8 @@ CREATE TABLE IF NOT EXISTS courseFaculty (
     FOREIGN KEY (createdBy) REFERENCES managementData(managerId),
     FOREIGN KEY (updatedBy) REFERENCES managementData(managerId)
 );
+INSERT INTO courseFaculty(courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(1,1,'2021','2025','A',1,1);
+INSERT INTO courseFaculty(courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(2,1,'2021','2025','A',1,1);
 
 -- Below table meant only for electives
 CREATE TABLE IF NOT EXISTS studentCourse(
@@ -158,6 +161,9 @@ CREATE TABLE IF NOT EXISTS classRoomData (
     classStatus CHAR(1) NOT NULL DEFAULT '1',
     FOREIGN KEY (classroomId) REFERENCES courseFaculty(classroomId)
 );
+INSERT INTO classRoomData(classroomId,classStartTime,classEndTime,classLink) VALUES(1,'2024-05-26 11:02:42','2024-05-29 11:02:51',"stackoverflow.com/questions/12422918/how-to-validate-timestamp-in-javascript");
+
+
 
 CREATE TABLE IF NOT EXISTS attendanceData (
     classId INT NOT NULL,
