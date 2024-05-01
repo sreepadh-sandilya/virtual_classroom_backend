@@ -13,6 +13,7 @@ const adminController = {
         });
     },
 
+    // done
     createNewCourse: [
         validateToken,
         async (req, res) => {
@@ -93,6 +94,7 @@ const adminController = {
         }
     ],
 
+    // done
     updateCourseData: [
         validateToken,
         async (req, res) => {
@@ -179,6 +181,7 @@ const adminController = {
         }
     ],
 
+    // done
     getAllCourses: [
         validateToken,
         async (req, res) => {
@@ -266,6 +269,8 @@ const adminController = {
             }
         }
     ],
+
+    // done
     assignProfessor: [
         validateToken,
         async (req, res) => {
@@ -276,7 +281,7 @@ const adminController = {
                 return res.status(400).send({ "message": "invalid inputs!" });
             }
 
-            if (!(typeof(req.body.isMentor) == 'string' && req.body.isMentor.length == 1)) {
+            if (!(typeof (req.body.isMentor) == 'string' && req.body.isMentor.length == 1)) {
                 return res.status(400).send({ "message": "invalid inputs!" });
             }
 
@@ -303,7 +308,7 @@ const adminController = {
 
                 if (professorCheck.length == 0) {
                     return res.status(400).send({ "message": "Professor does not exist." });
-                } 
+                }
 
                 // check if some professor is already assigned to course for that batch
                 await db_connection.query(`LOCK TABLES courseFaculty READ`);
@@ -340,6 +345,7 @@ const adminController = {
         }
     ],
 
+    // done
     editAssignedProfessor: [
         validateToken,
         async (req, res) => {
@@ -350,7 +356,7 @@ const adminController = {
                 return res.status(400).send({ "message": "invalid inputs!" });
             }
 
-            if (!(typeof(req.body.isMentor) == 'string' && req.body.isMentor.length == 1)) {
+            if (!(typeof (req.body.isMentor) == 'string' && req.body.isMentor.length == 1)) {
                 return res.status(400).send({ "message": "invalid inputs!" });
             }
 
@@ -416,6 +422,7 @@ const adminController = {
         }
     ],
 
+    // done
     addDepartment: [
         validateToken,
         async (req, res) => {
@@ -454,6 +461,8 @@ const adminController = {
             }
         }
     ],
+
+
     createClassroom: [
         validateToken,
         async (req, res) => {
@@ -736,6 +745,7 @@ const adminController = {
         }
     ],
 
+    // done
     getCourseById: [
         validateToken,
         async (req, res) => {
@@ -839,7 +849,7 @@ const adminController = {
         }
     ],
 
-
+    // done
     updateDepartment: [
         validateToken,
         async (req, res) => {
@@ -885,7 +895,7 @@ const adminController = {
         },
     ],
 
-
+    // done
     registerOfficial: [
         validateToken,
         async (req, res) => {
@@ -1006,6 +1016,7 @@ const adminController = {
         },
     ],
 
+    // done
     getAllOfficials: [
         validateToken,
         async (req, res) => {
@@ -1078,6 +1089,129 @@ const adminController = {
                 db_connection.release();
             }
 
+        }
+    ],
+
+    registerStudents: [
+        validateToken,
+        async (req, res) => {
+            /*
+            only admin, office staff can add students
+            */
+
+
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+
+
+            const db_connection = await vcDb.promise().getConnection();
+
+            try {
+
+                await db_connection.query(`LOCK TABLES managementData m READ`);
+
+                let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+
+                if (roleCheck.length == 0) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                if (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 3) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                /*
+                studentData: [
+                    {
+                        "studentName": "string",
+                        "studentRollNumber": "string",
+                        "studentGender": "string",
+                        "studentPhone": "string",
+                        "studentEmail": "string",
+                        "studentDob": "string",
+                        "studentDeptId": "string",
+                        "studentSection": "string",
+                        "studentBatchStart": "string",
+                        "studentBatchEnd": "string"
+                    },
+                    ...
+                ]
+                */
+
+                // validating the request
+
+                if (!Array.isArray(req.body.studentData)) {
+                    return res.status(400).send({ "message": "Invalid Data." });
+                }
+
+                // console.log(req.body.studentData);
+
+                let studentEmails = [];
+                let studentRollNumbers = [];
+                let studentPhones = [];
+
+                for (let i = 0; i < req.body.studentData.length; i++) {
+                    if (!(typeof (req.body.studentData[i].studentName) == 'string' && req.body.studentData[i].studentName.length > 0 && typeof (req.body.studentData[i].studentRollNumber) == 'string' && req.body.studentData[i].studentRollNumber.length > 0 && typeof (req.body.studentData[i].studentGender) == 'string' && req.body.studentData[i].studentGender.length > 0 && typeof (req.body.studentData[i].studentPhone) == 'string' && req.body.studentData[i].studentPhone.length > 0 && typeof (req.body.studentData[i].studentEmail) == 'string' && req.body.studentData[i].studentEmail.length > 0 && typeof (req.body.studentData[i].studentDob) == 'string' && req.body.studentData[i].studentDob.length > 0 && validator.isNumeric(req.body.studentData[i].studentDeptId) && typeof (req.body.studentData[i].studentSection) == 'string' && req.body.studentData[i].studentSection.length > 0 && typeof (req.body.studentData[i].studentBatchStart) == 'string' && req.body.studentData[i].studentBatchStart.length > 0 && typeof (req.body.studentData[i].studentBatchEnd) == 'string' && req.body.studentData[i].studentBatchEnd.length > 0)) {
+                        return res.status(400).send({ "message": "Invalid Data." });
+                    }
+
+                    // console.log(req.body.studentData[i]);
+
+                    studentEmails.push(req.body.studentData[i].studentEmail);
+                    studentRollNumbers.push(req.body.studentData[i].studentRollNumber);
+                    studentPhones.push(req.body.studentData[i].studentPhone);
+                }
+
+                // checking if the students already exists
+
+                if (studentEmails.length > 0 && studentRollNumbers.length > 0 && studentPhones.length > 0 && studentEmails.length == studentRollNumbers.length && studentRollNumbers.length == studentPhones.length) {
+                    await db_connection.query(`LOCK TABLES studentData READ`);
+                    let [checkEmails] = await db_connection.query(`SELECT studentEmail FROM studentData WHERE studentEmail IN (?)`, [studentEmails]);
+
+                    if (checkEmails.length != 0) {
+                        return res.status(400).send({ "message": "Email already exists." });
+                    }
+
+                    let [checkRollNumbers] = await db_connection.query(`SELECT studentRollNumber FROM studentData WHERE studentRollNumber IN (?)`, [studentRollNumbers]);
+
+                    if (checkRollNumbers.length != 0) {
+                        return res.status(400).send({ "message": "Roll Number already exists." });
+                    }
+
+                    let [checkPhones] = await db_connection.query(`SELECT studentPhone FROM studentData WHERE studentPhone IN (?)`, [studentPhones]);
+
+                    if (checkPhones.length != 0) {
+                        return res.status(400).send({ "message": "Phone Number already exists." });
+                    }
+
+                    // inserting the students
+                    await db_connection.query(`LOCK TABLES studentData WRITE`);
+
+                    for (let i = 0; i < req.body.studentData.length; i++) {
+
+                        const studentPassword = req.body.studentData[i].studentDob + "_" + req.body.studentData[i].studentRollNumber;
+
+                        await db_connection.query(`INSERT INTO studentData(studentName, studentRollNumber, studentGender, studentPhone, studentEmail, studentDob, studentDeptId, studentSection, studentBatchStart, studentBatchEnd, createdBy, studentPassword) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`, [req.body.studentData[i].studentName, req.body.studentData[i].studentRollNumber, req.body.studentData[i].studentGender, req.body.studentData[i].studentPhone, req.body.studentData[i].studentEmail, req.body.studentData[i].studentDob, req.body.studentData[i].studentDeptId, req.body.studentData[i].studentSection, req.body.studentData[i].studentBatchStart, req.body.studentData[i].studentBatchEnd, req.body.userId, studentPassword]);
+
+                    }
+
+                    await db_connection.query(`UNLOCK TABLES`);
+
+                    return res.status(200).send({ "message": "Students Registered." });
+                } else {
+                    return res.status(400).send({ "message": "Invalid Data." });
+                }
+            } catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - registerStudents - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
         }
     ],
 }
