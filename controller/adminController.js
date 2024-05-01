@@ -582,6 +582,7 @@ const adminController = {
                 }
                 await db_connection.query(`UPDATE classRoomData SET classroomId=?,classStartTime=?,classEndTime=?,classLink=? WHERE classId=?`, [req.body.classroomId, req.body.classStartTime, req.body.classEndTime, req.body.classLink, req.body.classId]);
                 await db_connection.query('UNLOCK TABLES');
+
                 return res.status(200).send({ "message": "sucessfully updated!" });
 
 
@@ -638,7 +639,7 @@ const adminController = {
                     return res.status(400).send({ "message": "start time cannot be greater than end time!" });
                 }
                 const duration = calculateDuration(req.body.startTime, req.body.endTime);
-                await db_connection.query(`INSERT INTO quizData(classroomId,quizName,quizDescription,quizData,startTime,endTime,duration,createdBy,updatedBy) VALUES(?,?,?,?,?,?,?,?,?)`, [req.body.classroomId, req.body.quizName, req.body.quizDescription, JSON.stringify(req.body.quizData), req.body.startTime, req.body.endTime, duration, req.body.userId, req.body.userId]);
+                await db_connection.query(`INSERT INTO quizData(classroomId,quizName,quizDescription,quizData,startTime,endTime,duration,createdBy,updatedBy) VALUES(?,?,?,?,?,?,?,?,?)`, [req.body.classroomId, req.body.quizName, req.body.quizDescription, JSON.stringify(req.body.quizData), req.body.startTime, req.body.endTime, "duration", req.body.userId, req.body.userId]);
                 await db_connection.query('UNLOCK TABLES');
                 return res.status(200).send({ "messgage": "quiz created!", "data": req.body.quizData });
             } catch (err) {
@@ -1092,6 +1093,7 @@ const adminController = {
         }
     ],
 
+    // done
     registerStudents: [
         validateToken,
         async (req, res) => {
@@ -1214,6 +1216,259 @@ const adminController = {
             }
         }
     ],
+
+
+    getClassRoomData: [
+        validateToken,
+        async (req, res) => {
+            /*
+            {
+                "classroomId": "string"
+            }
+            */
+
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+
+            if (!(typeof (req.body.classroomId) == 'string' && req.body.classroomId.length > 0 && validator.isNumeric(req.body.classroomId))) {
+                return res.status(400).send({ "message": "Invalid Data." });
+            }
+
+            let db_connection = await vcDb.promise().getConnection();
+
+            try {
+
+                await db_connection.query(`LOCK TABLES managementData m READ`);
+
+                let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+
+                if (roleCheck.length == 0) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                if (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3 && roleCheck[0].roleId != 4) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                if (roleCheck[0].roleId == 1 || roleCheck[0].roleId == 3) {
+
+                    // Join courseFaculty, courseData, managementData
+
+                    await db_connection.query(`LOCK TABLES courseFaculty f READ, courseData c READ, managementData m READ`);
+
+                    let [classData] = await db_connection.query(`SELECT f.classroomId, f.courseId, f.managerId, f.batchStart, f.batchEnd, f.section, f.isMentor, f.isActive, f.createdAt, f.updatedAt, c.courseCode, c.courseType, c.courseName, m.managerEmail, m.managerFullName FROM courseFaculty AS f JOIN courseData AS c ON f.courseId = c.courseId JOIN managementData AS m ON f.managerId = m.managerId WHERE f.classroomId = ?`, [req.body.classroomId]);
+
+                    if (classData.length == 0) {
+                        return res.status(400).send({ "message": "No class found.", });
+                    }
+
+
+                    // query classRoomData table
+
+                    await db_connection.query(`LOCK TABLES classRoomData READ, quizData READ`);
+
+                    let [classRoomData] = await db_connection.query(`SELECT * FROM classRoomData WHERE classroomId = ?`, [req.body.classroomId]);
+
+                    if (classRoomData.length == 0) {
+                        classRoomData = [];
+                    }
+
+                    let [quizData] = await db_connection.query(`SELECT * FROM quizData WHERE classroomId = ?`, [req.body.classroomId]);
+
+                    if (quizData.length == 0) {
+                        quizData = [];
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": classData,
+                        "classRoomData": classRoomData,
+                        "quizData": quizData
+                    });
+
+                } else if (roleCheck[0].roleId == 2) {
+
+                    // check if the classRoomId belongs to the dept
+
+                    await db_connection.query(`LOCK TABLES courseFaculty f READ, courseData c READ, managementData m READ`);
+
+                    let [classData] = await db_connection.query(`SELECT f.classroomId, f.courseId, f.managerId, f.batchStart, f.batchEnd, f.section, f.isMentor, f.isActive, f.createdAt, f.updatedAt, c.courseCode, c.courseType, c.courseName, m.managerEmail, m.managerFullName FROM courseFaculty AS f JOIN courseData AS c ON f.courseId = c.courseId JOIN managementData AS m ON f.managerId = m.managerId WHERE f.classroomId = ? AND c.courseDeptId = ?`, [req.body.classroomId, roleCheck[0].deptId]);
+
+                    if (classData.length == 0) {
+                        return res.status(400).send({ "message": "No class found.", });
+                    }
+
+                    // query classRoomData table
+
+                    await db_connection.query(`LOCK TABLES classRoomData READ, quizData READ`);
+
+                    let [classRoomData] = await db_connection.query(`SELECT * FROM classRoomData WHERE classroomId = ?`, [req.body.classroomId]);
+
+                    if (classRoomData.length == 0) {
+                        classRoomData = [];
+                    }
+
+                    let [quizData] = await db_connection.query(`SELECT * FROM quizData WHERE classroomId = ?`, [req.body.classroomId]);
+
+                    if (quizData.length == 0) {
+                        quizData = [];
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": classData,
+                        "classRoomData": classRoomData,
+                        "quizData": quizData
+                    });
+
+                } else if (roleCheck[0].roleId == 4) {
+
+                    // check if the classRoomId belongs to the professor
+
+                    await db_connection.query(`LOCK TABLES courseFaculty f READ, courseData c READ, managementData m READ`);
+
+                    let [classData] = await db_connection.query(`SELECT f.classroomId, f.courseId, f.managerId, f.batchStart, f.batchEnd, f.section, f.isMentor, f.isActive, f.createdAt, f.updatedAt, c.courseCode, c.courseType, c.courseName, m.managerEmail, m.managerFullName FROM courseFaculty AS f JOIN courseData AS c ON f.courseId = c.courseId JOIN managementData AS m ON f.managerId = m.managerId WHERE f.classroomId = ? AND f.managerId = ?`, [req.body.classroomId, req.body.userId]);
+
+                    if (classData.length == 0) {
+                        return res.status(400).send({ "message": "No class found.", });
+                    }
+
+                    // query classRoomData table
+
+                    await db_connection.query(`LOCK TABLES classRoomData READ, quizData READ`);
+
+                    let [classRoomData] = await db_connection.query(`SELECT * FROM classRoomData WHERE classroomId = ?`, [req.body.classroomId]);
+
+                    if (classRoomData.length == 0) {
+                        classRoomData = [];
+                    }
+
+                    let [quizData] = await db_connection.query(`SELECT * FROM quizData WHERE classroomId = ?`, [req.body.classroomId]);
+
+                    if (quizData.length == 0) {
+                        quizData = [];
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": classData,
+                        "classRoomData": classRoomData,
+                        "quizData": quizData
+                    });
+                }
+
+                return res.status(400).send({ "message": "Unauthorized Access." });
+
+            } catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getClassRoomData - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+
+        }
+    ],
+
+    getQuizById: [
+        validateToken,
+        async (req, res) => {
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+
+            if (!(typeof (req.body.classroomId) == 'string' && req.body.classroomId.length > 0 && validator.isNumeric(req.body.classroomId))) {
+                return res.status(400).send({ "message": "Invalid Data." });
+            }
+
+            if (!(typeof (req.body.quizId) == 'string' && req.body.quizId.length > 0 && validator.isNumeric(req.body.quizId))) {
+                return res.status(400).send({ "message": "Invalid Data." });
+            }
+
+            let db_connection = await vcDb.promise().getConnection();
+
+            try {
+
+                await db_connection.query(`LOCK TABLES managementData m READ`);
+
+                let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+
+                if (roleCheck.length == 0) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                if (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3 && roleCheck[0].roleId != 4) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                if (roleCheck[0].roleId == 1 || roleCheck[0].roleId == 3) {
+
+                    await db_connection.query(`LOCK TABLES quizData READ`);
+
+                    let [quizData] = await db_connection.query(`SELECT * FROM quizData WHERE quizId = ? AND classroomId = ?`, [req.body.quizId, req.body.classroomId]);
+
+                    if (quizData.length == 0) {
+                        return res.status(400).send({ "message": "No quiz found." });
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": quizData
+                    });
+
+                } else if (roleCheck[0].roleId == 2) {
+
+                    // only if it belongs to the dept
+
+                    await db_connection.query(`LOCK TABLES quizData READ, courseFaculty f READ, courseData c READ`);
+
+                    let [quizData] = await db_connection.query(`SELECT q.* FROM quizData AS q JOIN courseFaculty AS f ON q.classroomId = f.classroomId JOIN courseData AS c ON f.courseId = c.courseId WHERE q.quizId = ? AND q.classroomId = ? AND c.courseDeptId = ?`, [req.body.quizId, req.body.classroomId, roleCheck[0].deptId]);
+
+                    if (quizData.length == 0) {
+                        return res.status(400).send({ "message": "No quiz found." });
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": quizData
+                    });
+
+                } else if (roleCheck[0].roleId == 4) {
+
+                    // only if it belongs to the professor's classroomId
+
+                    await db_connection.query(`LOCK TABLES quizData READ, courseFaculty f READ`);
+
+                    let [quizData] = await db_connection.query(`SELECT * FROM quizData WHERE quizId = ? AND classroomId = ? AND createdBy = ?`, [req.body.quizId, req.body.classroomId, req.body.userId]);
+
+                    if (quizData.length == 0) {
+                        return res.status(400).send({ "message": "No quiz found." });
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": quizData
+                    });
+                }
+
+                return res.status(400).send({ "message": "Unauthorized Access." });
+
+            } catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getQuizById - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+        }
+    ]
 }
 
 module.exports = adminController;

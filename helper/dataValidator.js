@@ -7,8 +7,8 @@ function validateEmail(email) {
 }
 
 function ValidTimestamp(timestamp) {
-    // Regular expression to match the "YYYY-MM-DD HH:mm:ss" format
-    const timestampRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+    // Regular expression to match the "YYYY-MM-DDTHH:mm:ss" format
+    const timestampRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
   
     // Check if the timestamp matches the expected format
     if (!timestampRegex.test(timestamp)) {
@@ -23,11 +23,7 @@ function ValidTimestamp(timestamp) {
   }
   
   function ValidateLink(link) {
-    // Regular expression to match URL format
-    const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*\/?$/;
-  
-    // Check if the link matches the expected format
-    return urlRegex.test(link);
+    return typeof link === 'string' && link.length > 0;
   }
 
   function calculateDuration(startTimestamp, endTimestamp) {

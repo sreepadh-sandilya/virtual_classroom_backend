@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS classRoomData (
     classStatus CHAR(1) NOT NULL DEFAULT '1',
     FOREIGN KEY (classroomId) REFERENCES courseFaculty(classroomId)
 );
-INSERT INTO classRoomData(classroomId,classStartTime,classEndTime,classLink) VALUES(1,'2024-05-26 11:02:42','2024-05-29 11:02:51',"stackoverflow.com/questions/12422918/how-to-validate-timestamp-in-javascript");
+INSERT INTO classRoomData(classroomId,classStartTime,classEndTime,classLink) VALUES(1,'2024-05-26T11:02:00','2024-05-29T11:02:00',"stackoverflow.com/questions/12422918/how-to-validate-timestamp-in-javascript");
 
 
 

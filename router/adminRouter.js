@@ -19,10 +19,14 @@ adminRouter.post("/assign/professor/update", adminController.editAssignedProfess
 adminRouter.post("/department/create",adminController.addDepartment);
 adminRouter.post("/department/update",adminController.updateDepartment);
 
-adminRouter.post("/create/classroom",adminController.createClassroom);
-adminRouter.post("/update/classroom",adminController.updateClassroom);
-adminRouter.post("/create/quiz",adminController.createQuiz);
-adminRouter.post("/update/quiz",adminController.updateQuiz);
+adminRouter.post("/classroom/create",adminController.createClassroom);
+adminRouter.post("/classroom/update",adminController.updateClassroom);
+
+adminRouter.post("/quiz/create",adminController.createQuiz);
+adminRouter.post("/quiz/update",adminController.updateQuiz);
+adminRouter.post("/quiz/get",adminController.getQuizById);
+
+adminRouter.post("/classroom/get", adminController.getClassRoomData);
 
 adminRouter.post("/student/create", adminController.registerStudents);
 
