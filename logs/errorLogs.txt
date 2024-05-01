@@ -25,3 +25,4 @@
 2024-05-01T04:31:40.145Z - getMyCourses - Error: Column count doesn't match value count at row 1
 2024-05-01T04:34:53.219Z - getMyCourses - Error: Data too long for column 'duration' at row 1
 2024-05-01T05:21:40.359Z - getMyCourses - Error: Table 'f' was not locked with LOCK TABLES
+2024-05-01T06:51:28.771Z - getMyCourses - Error: Table 'courseFaculty' was not locked with LOCK TABLES

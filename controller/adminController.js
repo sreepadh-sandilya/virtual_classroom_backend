@@ -691,7 +691,7 @@ const adminController = {
         validateToken,
         async (req, res) => {
             if (req.body.userRole != 'M') {
-                return res.status(401).send({ "message": "Unauthorized Access." });
+                return res.status(401).send({ "message": "Unauthorized Access!" });
             }
 
             if (!(validator.isNumeric(req.params.courseId))) {
@@ -708,9 +708,9 @@ const adminController = {
                 await db_connection.query(`LOCK TABLES managementData m READ`);
 
                 let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
-
-                if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
-                    return res.status(400).send({ "message": "Unauthorized Access." });
+                // console.log(roleCheck);
+                if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3 && roleCheck[0].roleId != 4)) {
+                    return res.status(400).send({ "message": "Unauthorized Access!!" });
                 }
 
 
@@ -718,7 +718,7 @@ const adminController = {
                 if (roleCheck[0].roleId == 1 || roleCheck[0].roleId == 3) {
                     await db_connection.query('LOCK TABLES courseData c READ, departmentData d READ, managementData m READ');
 
-                    let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseType, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId WHERE c.courseId = ?`, [req.params.courseId]);
+                    let [courseData] = await db_connection.query(`SELECT * FROM courseFaculty WHERE courseId=?`,[req.params.courseId]);
 
                     if (courseData.length === 0) {
                         return res.status(200).send({ "message": "No courses found.", "data": [] });
@@ -733,13 +733,14 @@ const adminController = {
 
                 // if dept head. show only respective dept courses
                 if (roleCheck[0].roleId == 2) {
-                    await db_connection.query('LOCK TABLES courseData c READ, departmentData d READ, managementData m READ');
+                    await db_connection.query('LOCK TABLES courseData c READ, courseFaculty f READ');
 
-                    let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseType, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId WHERE c.courseDeptId = ? WHERE c.courseId = ?`, [roleCheck[0].deptId, req.params.courseId]);
+                    let [courseData] = await db_connection.query(`SELECT * FROM courseFaculty AS f INNER JOIN courseData AS c ON f.courseId=c.courseId WHERE f.courseId=? AND c.courseDeptId=?`,[req.params.courseId,roleCheck[0].deptId]);
 
                     if (courseData.length === 0) {
                         return res.status(200).send({ "message": "No courses found.", "data": [] });
                     }
+                    
 
                     return res.status(200).send({
                         "message": "Fetched Successfully",
@@ -749,16 +750,17 @@ const adminController = {
 
                 // if professor. show only their courses
                 if (roleCheck[0].roleId == 4) {
-                    return res.status(400).send({
-                        "message": "Work in Progress",
+                    await db_connection.query('LOCK TABLES courseData READ, courseFaculty READ'); 
+
+                    let [courseData] = await db_connection.query(`SELECT * FROM courseFaculty WHERE courseId=? AND managerId=?`,[req.params.courseId,req.body.userId]);
+                    if(courseData.length==0){
+                        return res.status(200).send({ "message": "No courses found.", "data": [] });
+                    }
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": courseData,
                     })
                 }
-
-
-                return res.status(400).send({
-                    "message": "Invalid Request"
-                });
-
             } catch (err) {
                 console.log(err);
                 const time = new Date();
@@ -770,7 +772,8 @@ const adminController = {
                 db_connection.release();
             }
         }
-    ]
+    ],
+
 }
 
 module.exports = adminController;
