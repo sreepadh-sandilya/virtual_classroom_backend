@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS courseFaculty (
     FOREIGN KEY (updatedBy) REFERENCES managementData(managerId)
 );
 INSERT INTO courseFaculty(courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(1,1,'2021','2025','A',1,1);
-INSERT INTO courseFaculty(courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(2,1,'2021','2025','A',1,1);
+INSERT INTO courseFaculty(courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(2,4,'2021','2025','A',1,1);
 
 -- Below table meant only for electives
 CREATE TABLE IF NOT EXISTS studentCourse(
@@ -182,14 +182,14 @@ CREATE TABLE IF NOT EXISTS quizData (
     isOpenForAll CHAR(1) NOT NULL DEFAULT '0',
     startTime TIMESTAMP NOT NULL,
     endTime TIMESTAMP NOT NULL,
-    duration VARCHAR(11) NULL, -- Format: 00:00:00:00
+    duration VARCHAR(20) NULL, -- Format: 00:00:00:00
     createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     createdBy INT NOT NULL,
     updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updatedBy INT NOT NULL,
     FOREIGN KEY (classroomId) REFERENCES courseFaculty(classroomId),
     FOREIGN KEY (createdBy) REFERENCES managementData(managerId),
-    FOREIGN KEY (updatedBy) REFERENCES managementData(managerId)
+    FOREIGN KEY (updatedBy) REFERENCES managementData(managerId) 
 );
 
 CREATE TABLE IF NOT EXISTS quizSubmission (

@@ -11,4 +11,6 @@ adminRouter.post("/assign/professor", adminController.assignProfessor);
 adminRouter.post("/add/department",adminController.addDepartment);
 adminRouter.post("/create/classroom",adminController.createClassroom);
 adminRouter.post("/update/classroom",adminController.updateClassroom);
+adminRouter.post("/create/quiz",adminController.createQuiz);
+adminRouter.post("/update/quiz",adminController.updateQuiz);
 module.exports = adminRouter;
