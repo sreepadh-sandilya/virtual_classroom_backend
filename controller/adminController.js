@@ -272,89 +272,61 @@ const adminController = {
             if (req.body.userRole != 'M') {
                 return res.status(401).send({ "message": "Unauthorized Access." });
             }
+            if (!(typeof (req.body.batchStart) == 'string' && req.body.batchStart.length == 4 && typeof (req.body.batchEnd) == 'string' && req.body.batchEnd.length == 4 && typeof (req.body.section) == 'string' && req.body.section.length == 1 && validator.isNumeric(req.body.courseId) && validateEmail(req.body.managerEmail))) {
+                return res.status(400).send({ "message": "invalid inputs!" });
+            }
+
+            if (!(typeof(req.body.isMentor) == 'string' && req.body.isMentor.length == 1)) {
+                return res.status(400).send({ "message": "invalid inputs!" });
+            }
+
             let db_connection = await vcDb.promise().getConnection();
             try {
-                if (!(typeof (req.body.batchStart) == 'string' && req.body.batchStart.length == 4 && typeof (req.body.batchEnd) == 'string' && req.body.batchEnd.length == 4 && typeof (req.body.section) == 'string' && req.body.section.length == 1 && validator.isNumeric(req.body.courseId) && validateEmail(req.body.managerEmail))) {
-                    return res.status(400).send({ "message": "invalid inputs!" });
-                }
-                await db_connection.query(`LOCK TABLES managementData READ`);
 
-                let [roleCheck] = await db_connection.query(`SELECT * FROM managementData WHERE managerId=?`, [req.body.userId]);
+                await db_connection.query(`LOCK TABLES managementData m READ, courseData c READ`);
+
+                let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+
                 if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
                     return res.status(400).send({ "message": "Unauthorized Access." });
                 }
-                // the course id should be in course table
-                await db_connection.query(`LOCK TABLES courseData READ`);
-                let [courseCheck] = await db_connection.query(`SELECT courseId,courseDeptId FROM courseData WHERE courseId=?`, [req.body.courseId]);
-                // console.log({"courseCheck":courseCheck});
+
+                let [courseCheck] = await db_connection.query(`SELECT courseId FROM courseData AS c WHERE courseId = ?`, [req.body.courseId]);
+
                 if (courseCheck.length == 0) {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(400).send({ "message": "course not exists" });
-                }
-                // check if managerId exists
-                await db_connection.query(`UNLOCK TABLES`);
-                await db_connection.query(`LOCK TABLES managementData READ`);
-                let [managerCheck] = await db_connection.query(`SELECT managerId,deptId FROM managementData WHERE managerEmail=?`, [req.body.managerEmail]);
-                // console.log({"managerCheck":managerCheck});
-                if (managerCheck.length == 0) {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(400).send({ "message": "manager not exists" });
-                }
-                // check if section is present or not
-                await db_connection.query(`UNLOCK TABLES`);
-                await db_connection.query(`LOCK TABLES studentData READ`);
-                let [sectionCheck] = await db_connection.query(`SELECT studentSection FROM studentData WHERE studentSection=?`, [req.body.section]);
-                // console.log({"sectionCheck":sectionCheck});
-                if (sectionCheck.length === 0) {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(400).send({ "message": "section not exists" });
-                }
-                // batch exists or not
-                await db_connection.query(`UNLOCK TABLES`);
-                await db_connection.query(`LOCK TABLES studentData READ`);
-                let [batchCheck] = await db_connection.query(`SELECT studentBatchStart FROM studentData WHERE studentBatchStart=? AND studentBatchEnd=?`, [req.body.batchStart, req.body.batchEnd]);
-                // console.log({"batchCheck":batchCheck});
-                if (batchCheck.length == 0) {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(400).send({ "message": "batch not exists" });
+                    return res.status(400).send({ "message": "Course does not exist." });
                 }
 
-                // whether section is present for that particular batch
-                await db_connection.query(`UNLOCK TABLES`);
-                await db_connection.query(`LOCK TABLES studentData READ`);
-                let [sectionCheckBatch] = await db_connection.query(`SELECT studentSection FROM studentData WHERE studentSection=? AND studentBatchStart=? AND studentBatchEnd=?`, [req.body.section, req.body.batchStart, req.body.batchEnd]);
-                // console.log({"sectionCheckBatch":sectionCheckBatch});
-                if (sectionCheckBatch.length === 0) {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(400).send({ "message": "batch not exists" });
+                await db_connection.query(`LOCK TABLES courseFaculty f WRITE, managementData m READ`);
+
+                let [professorCheck] = await db_connection.query(`SELECT managerId FROM managementData AS m WHERE managerEmail = ? AND (roleId = 2 OR roleId = 4)`, [req.body.managerEmail]);
+
+                if (professorCheck.length == 0) {
+                    return res.status(400).send({ "message": "Professor does not exist." });
+                } 
+
+                // check if some professor is already assigned to course for that batch
+                await db_connection.query(`LOCK TABLES courseFaculty READ`);
+                let [professorCourseCheck] = await db_connection.query(`SELECT * FROM courseFaculty WHERE courseId = ? AND batchStart = ? AND batchEnd = ? AND section = ?`, [req.body.courseId, req.body.batchStart, req.body.batchEnd, req.body.section]);
+
+                if (professorCourseCheck.length > 0) {
+                    return res.status(400).send({ "message": "Some Professor already assigned to course for that batch." });
                 }
 
-                //whether coursedept and managerdept are same
-                if (managerCheck[0].deptId != courseCheck[0].courseDeptId) {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(400).send({ "message": "not same departments" });
+                // check is mentor is already assigned to course and batch
+                if (req.body.isMentor === "1") {
+                    let [mentorCheck] = await db_connection.query(`SELECT * FROM courseFaculty WHERE courseId = ? AND batchStart = ? AND batchEnd = ? AND section = ? AND isMentor = '1'`, [req.body.courseId, req.body.batchStart, req.body.batchEnd, req.body.section]);
+
+                    if (mentorCheck.length > 0) {
+                        return res.status(400).send({ "message": "Mentor already assigned to course for that batch." });
+                    }
                 }
-                // whether the course is present for that particular batch-section combo
-                await db_connection.query(`LOCK TABLES courseData READ,studentData READ`)
-                let [batchSectionCheck] = await db_connection.query(`SELECT courseData.courseId FROM courseData INNER JOIN studentData ON studentData.studentDeptId=courseData.courseDeptId WHERE studentData.studentSection=? AND studentData.studentBatchStart=? AND studentBatchEnd`, [req.body.section, req.body.batchStart, req.body.batchEnd]);
-                if (batchSectionCheck.length == 0) {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(400).send({ "message": "course doesnot exists for that batch and section" });
-                }
-                if (req.roleId == 2 && roleCheck[0].deptId != courseCheck[0].courseDeptId && roleCheck[0].deptId != managerCheck[0].deptId) {
-                    await db_connection.query(`UNLOCK TABLES`);
-                    return res.status(400).send({ "message": "user is of different department" });
-                }
+
                 await db_connection.query(`LOCK TABLES courseFaculty WRITE`);
-                let [insert] = await db_connection.query(`INSERT INTO courseFaculty (courseId,managerId,batchStart,batchEnd,section,createdBy,updatedBy) VALUES(?,?,?,?,?,?,?)`, [req.body.courseId, managerCheck[0].managerId, req.body.batchStart, req.body.batchEnd, req.body.section, req.body.userId, req.body.userId])
-                // console.log({"insert":insert})
-                await db_connection.query(`UNLOCK TABLES`);
-                if (insert.affectedRows == 0) {
-                    return res.status(400).send({ "messgae": "internal server error" });
-                }
-                else {
-                    res.status(200).send({ "message": "sucessfully updated!" });
-                }
+                await db_connection.query(`INSERT INTO courseFaculty (courseId, managerId, batchStart, batchEnd, section, isMentor, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [req.body.courseId, professorCheck[0].managerId, req.body.batchStart, req.body.batchEnd, req.body.section, req.body.isMentor, req.body.userId, req.body.userId]);
+
+                return res.status(200).send({ "message": "Professor assigned to course." });
+
             } catch (err) {
                 console.log(err);
                 const time = new Date();
@@ -367,6 +339,83 @@ const adminController = {
             }
         }
     ],
+
+    editAssignedProfessor: [
+        validateToken,
+        async (req, res) => {
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+            if (!(typeof (req.body.batchStart) == 'string' && req.body.batchStart.length == 4 && typeof (req.body.batchEnd) == 'string' && req.body.batchEnd.length == 4 && typeof (req.body.section) == 'string' && req.body.section.length == 1 && validator.isNumeric(req.body.courseId) && validateEmail(req.body.managerEmail))) {
+                return res.status(400).send({ "message": "invalid inputs!" });
+            }
+
+            if (!(typeof(req.body.isMentor) == 'string' && req.body.isMentor.length == 1)) {
+                return res.status(400).send({ "message": "invalid inputs!" });
+            }
+
+            let db_connection = await vcDb.promise().getConnection();
+
+            try {
+
+                await db_connection.query(`LOCK TABLES managementData m READ, courseData c READ`);
+
+                let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+
+                if (roleCheck.length == 0 || (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3)) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                let [courseCheck] = await db_connection.query(`SELECT courseId FROM courseData AS c WHERE courseId = ?`, [req.body.courseId]);
+
+                if (courseCheck.length == 0) {
+                    return res.status(400).send({ "message": "Course does not exist." });
+                }
+
+                await db_connection.query(`LOCK TABLES courseFaculty f READ, managementData m READ`);
+
+                let [professorCheck] = await db_connection.query(`SELECT managerId FROM managementData AS m WHERE managerEmail = ? AND (roleId = 2 OR roleId = 4)`, [req.body.managerEmail]);
+
+                if (professorCheck.length == 0) {
+                    return res.status(400).send({ "message": "Professor does not exist." });
+                }
+
+                // check whether entry exists in courseFaculty
+
+                await db_connection.query(`LOCK TABLES courseFaculty READ`);
+                let [professorCourseCheck] = await db_connection.query(`SELECT * FROM courseFaculty WHERE courseId = ? AND batchStart = ? AND batchEnd = ? AND section = ?`, [req.body.courseId, req.body.batchStart, req.body.batchEnd, req.body.section]);
+
+                if (professorCourseCheck.length == 0) {
+                    return res.status(400).send({ "message": "No Professor assigned to course for that batch." });
+                }
+
+                // check is mentor is already assigned to course and batch
+                if (req.body.isMentor === "1") {
+                    let [mentorCheck] = await db_connection.query(`SELECT * FROM courseFaculty WHERE courseId = ? AND batchStart = ? AND batchEnd = ? AND section = ? AND isMentor = '1'`, [req.body.courseId, req.body.batchStart, req.body.batchEnd, req.body.section]);
+
+                    if (mentorCheck.length > 0) {
+                        return res.status(400).send({ "message": "Mentor already assigned to course for that batch." });
+                    }
+                }
+
+                await db_connection.query(`LOCK TABLES courseFaculty WRITE`);
+                await db_connection.query(`UPDATE courseFaculty SET managerId = ?, isMentor = ?, updatedBy = ? WHERE courseId = ? AND batchStart = ? AND batchEnd = ? AND section = ?`, [professorCheck[0].managerId, req.body.isMentor, req.body.userId, req.body.courseId, req.body.batchStart, req.body.batchEnd, req.body.section]);
+
+                return res.status(200).send({ "message": "Professor assigned to course." });
+
+            } catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getMyCourses - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+        }
+    ],
+
     addDepartment: [
         validateToken,
         async (req, res) => {
@@ -955,6 +1004,81 @@ const adminController = {
                 db_connection.release();
             }
         },
+    ],
+
+    getAllOfficials: [
+        validateToken,
+        async (req, res) => {
+            /*
+            Admin can view all
+            Dept Head can view his dept officials
+            Professor not allowed
+            */
+
+            if (req.body.userRole != 'M') {
+                return res.status(401).send({ "message": "Unauthorized Access." });
+            }
+
+            let db_connection = await vcDb.promise().getConnection();
+
+            try {
+
+                await db_connection.query(`LOCK TABLES managementData m READ`);
+
+                let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
+
+                if (roleCheck.length == 0) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                if (roleCheck[0].roleId != 1 && roleCheck[0].roleId != 2 && roleCheck[0].roleId != 3) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+                if (roleCheck[0].roleId == 1) {
+                    await db_connection.query(`LOCK TABLES managementData m READ, departmentData d READ`);
+
+                    let [officialsData] = await db_connection.query(`SELECT m.managerId, m.managerEmail, m.managerFullName, m.roleId, m.deptId, d.deptName FROM managementData AS m JOIN departmentData AS d ON m.deptId = d.deptId`);
+
+                    if (officialsData.length == 0) {
+                        return res.status(200).send({ "message": "No officials found.", "data": [] });
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": officialsData
+                    })
+
+                } else if (roleCheck[0].roleId == 2) {
+                    await db_connection.query(`LOCK TABLES managementData m READ, departmentData d READ`);
+
+                    let [officialsData] = await db_connection.query(`SELECT m.managerId, m.managerEmail, m.managerFullName, m.roleId, m.deptId, d.deptName FROM managementData AS m JOIN departmentData AS d ON m.deptId = d.deptId WHERE m.deptId = ?`, [roleCheck[0].deptId]);
+
+                    if (officialsData.length == 0) {
+                        return res.status(200).send({ "message": "No officials found.", "data": [] });
+                    }
+
+                    return res.status(200).send({
+                        "message": "Fetched Successfully",
+                        "data": officialsData
+                    })
+                } else if (roleCheck[0].roleId == 3) {
+                    return res.status(400).send({ "message": "Unauthorized Access." });
+                }
+
+
+            } catch (err) {
+                console.log(err);
+                const time = new Date();
+                fs.appendFileSync('logs/errorLogs.txt', `${time.toISOString()} - getAllOfficials - ${err}\n`);
+                return res.status(500).send({ "message": "Internal Server Error." });
+            } finally {
+                await db_connection.query('UNLOCK TABLES');
+                db_connection.close();
+                db_connection.release();
+            }
+
+        }
     ],
 }
 

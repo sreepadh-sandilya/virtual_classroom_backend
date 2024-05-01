@@ -6,6 +6,7 @@ const adminRouter = express.Router();
 adminRouter.get("/test", adminController.testConnection);
 
 adminRouter.post("/official/create", adminController.registerOfficial);
+adminRouter.get("/official/all", adminController.getAllOfficials);
 
 adminRouter.get("/course/all", adminController.getAllCourses);
 adminRouter.post("/course/create", adminController.createNewCourse);
@@ -13,6 +14,7 @@ adminRouter.post("/course/update", adminController.updateCourseData);
 adminRouter.get("/course/:courseId(\\d+)", adminController.getCourseById);
 
 adminRouter.post("/assign/professor", adminController.assignProfessor);
+adminRouter.post("/assign/professor/update", adminController.editAssignedProfessor);
 
 adminRouter.post("/department/create",adminController.addDepartment);
 adminRouter.post("/department/update",adminController.updateDepartment);
