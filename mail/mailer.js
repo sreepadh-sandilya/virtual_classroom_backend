@@ -1,5 +1,6 @@
 const mailer = require('nodemailer');
 const TEMPLATE_PWRESET_OTP = require('./template_otp');
+const TEMPLATE_OFFICIAL_ADDED = require('./template_official_added');
 
 const transporter = mailer.createTransport({
     service: 'Gmail',
@@ -10,11 +11,32 @@ const transporter = mailer.createTransport({
 });
 
 module.exports = {
+
+    new_official_created: (officialName, officialEmail, officialPassword) => {
+        var mailOptions = {
+            from: {
+                name: "Virtual Classroom",
+                address: 'sreepadhkadapa@gmail.com'
+            },
+            to: officialEmail,
+            subject: '[Official Added] Virtual Classroom',
+            html: TEMPLATE_OFFICIAL_ADDED(officialName, officialEmail, officialPassword)
+        }
+
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('NewOfficial Email sent: ' + officialEmail);
+            }
+        });
+    },
+
     reset_PW_OTP: (userName, otp, userEmail) => {
         var mailOptions = {
             from: {
                 name: "Virtual Classroom",
-                address: 'auth.amrita.placements@gmail.com'
+                address: 'sreepadhkadapa@gmail.com'
             },
             to: userEmail,
             subject: '[Forgot Password OTP] Virtual Classroom',

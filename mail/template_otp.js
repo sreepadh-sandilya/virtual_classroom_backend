@@ -5,7 +5,7 @@ const TEMPLATE_PWRESET_OTP = (otp, userName) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Amrita Placement Tracker OTP</title>
+        <title>[Forgot Password OTP] Virtual Classroom</title>
         <style>
             * {
                 margin: 0;
