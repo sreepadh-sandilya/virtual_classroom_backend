@@ -13,4 +13,5 @@ adminRouter.post("/create/classroom",adminController.createClassroom);
 adminRouter.post("/update/classroom",adminController.updateClassroom);
 adminRouter.post("/create/quiz",adminController.createQuiz);
 adminRouter.post("/update/quiz",adminController.updateQuiz);
+adminRouter.get("/course/:courseId(\\d+)", adminController.getCourseById)
 module.exports = adminRouter;
