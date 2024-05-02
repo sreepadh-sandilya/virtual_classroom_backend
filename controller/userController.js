@@ -621,11 +621,11 @@ const userController = {
                 for (let i = 0; i < quizData[0]["quizData"].length; i++) {
                     if (quizData[0]["quizData"][i]["type"] == 'fill_in') {
                         if (req.body.quizSubmissionData[i]["answer"].toLowerCase() == quizData[0]["quizData"][i]["correct_answer"].toLowerCase()) {
-                            marks += quizData[0]["quizData"][i]["marks"];
+                            marks += parseInt(quizData[0]["quizData"][i]["marks"]);
                         }
                     } else if (quizData[0]["quizData"][i]["type"] == 'mcq') {
                         if (req.body.quizSubmissionData[i]["answer"].toLowerCase() == quizData[0]["quizData"][i]["correct_option"].toLowerCase()) {
-                            marks += quizData[0]["quizData"][i]["marks"];
+                            marks += parseInt(quizData[0]["quizData"][i]["marks"]);
                         }
                     } else if (quizData[0]["quizData"][i]["type"] == 'mcq_multiple') {
                         let correct = true;
@@ -636,7 +636,7 @@ const userController = {
                             }
                         }
                         if (correct) {
-                            marks += quizData[0]["quizData"][i]["marks"];
+                            marks += parseInt(quizData[0]["quizData"][i]["marks"]);
                         }
                     }
                 }
