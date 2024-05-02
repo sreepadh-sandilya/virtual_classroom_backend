@@ -795,7 +795,7 @@ const adminController = {
 
                 // if dept head. show only respective dept courses
                 if (roleCheck[0].roleId == 2) {
-                    await db_connection.query('LOCK TABLES courseData c READ, departmentData d READ, managementData m READ');
+                    await db_connection.query('LOCK TABLES courseFaculty f READ, courseData c READ, departmentData d READ, managementData m READ');
 
                     let [courseData] = await db_connection.query(`SELECT c.courseId, c.courseCode, c.courseType, c.courseName, c.courseDeptId, d.deptName, m.managerEmail, m.managerFullName FROM courseData AS c JOIN departmentData AS d ON c.courseDeptId = d.deptId JOIN managementData AS m ON c.createdBy = m.managerId WHERE c.courseDeptId = ? AND c.courseId = ?`, [roleCheck[0].deptId, req.params.courseId]);
 
@@ -818,7 +818,7 @@ const adminController = {
 
                     // check if the course is assigned to the professor
 
-                    let [checkCourse] = await db_connection.query(`SELECT courseId FROM courseFaculty WHERE courseId = ? AND managerId = ?`, [req.params.courseId, req.body.userId]);
+                    let [checkCourse] = await db_connection.query(`SELECT courseId FROM courseFaculty AS f WHERE courseId = ? AND managerId = ?`, [req.params.courseId, req.body.userId]);
 
                     if (checkCourse.length == 0) {
                         return res.status(200).send({ "message": "No courses found.", "data": [] });
@@ -1426,7 +1426,7 @@ const adminController = {
 
                     // only if it belongs to the dept
 
-                    await db_connection.query(`LOCK TABLES quizData READ, courseFaculty f READ, courseData c READ`);
+                    await db_connection.query(`LOCK TABLES quizData q READ, courseFaculty f READ, courseData c READ`);
 
                     let [quizData] = await db_connection.query(`SELECT q.* FROM quizData AS q JOIN courseFaculty AS f ON q.classroomId = f.classroomId JOIN courseData AS c ON f.courseId = c.courseId WHERE q.quizId = ? AND q.classroomId = ? AND c.courseDeptId = ?`, [req.body.quizId, req.body.classroomId, roleCheck[0].deptId]);
 
@@ -1445,7 +1445,7 @@ const adminController = {
 
                     await db_connection.query(`LOCK TABLES quizData READ, courseFaculty f READ`);
 
-                    let [quizData] = await db_connection.query(`SELECT * FROM quizData WHERE quizId = ? AND classroomId = ? AND createdBy = ?`, [req.body.quizId, req.body.classroomId, req.body.userId]);
+                    let [quizData] = await db_connection.query(`SELECT * FROM quizData WHERE quizId = ? AND classroomId = ?`, [req.body.quizId, req.body.classroomId]);
 
                     if (quizData.length == 0) {
                         return res.status(400).send({ "message": "No quiz found." });
