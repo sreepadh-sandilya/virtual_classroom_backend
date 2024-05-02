@@ -1039,6 +1039,8 @@ const adminController = {
 
                 let [roleCheck] = await db_connection.query(`SELECT * FROM managementData AS m WHERE managerId = ?`, [req.body.userId]);
 
+                // console.log(roleCheck);
+
                 if (roleCheck.length == 0) {
                     return res.status(400).send({ "message": "Unauthorized Access." });
                 }
@@ -1047,7 +1049,7 @@ const adminController = {
                     return res.status(400).send({ "message": "Unauthorized Access." });
                 }
 
-                if (roleCheck[0].roleId == 1) {
+                if (roleCheck[0].roleId == 1 || roleCheck[0].roleId == 3) {
                     await db_connection.query(`LOCK TABLES managementData m READ, departmentData d READ`);
 
                     let [officialsData] = await db_connection.query(`SELECT m.managerId, m.managerEmail, m.managerFullName, m.roleId, m.deptId, d.deptName FROM managementData AS m JOIN departmentData AS d ON m.deptId = d.deptId`);
@@ -1074,7 +1076,7 @@ const adminController = {
                         "message": "Fetched Successfully",
                         "data": officialsData
                     })
-                } else if (roleCheck[0].roleId == 3) {
+                } else if (roleCheck[0].roleId == 4) {
                     return res.status(400).send({ "message": "Unauthorized Access." });
                 }
 
